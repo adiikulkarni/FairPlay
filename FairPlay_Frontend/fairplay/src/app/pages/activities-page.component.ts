@@ -1,73 +1,121 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-activities-page',
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, DatePipe],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    DatePipe
+  ],
   template: `
     <section class="page-grid">
-      <div class="headline">
-        <div>
-          <h1>Find Your Next Match</h1>
-          <p>Join local games, meet athletes, and host your own activity from the same live feed.</p>
-        </div>
-      </div>
-
-      <section class="section-card">
-        <form [formGroup]="form" (ngSubmit)="host()" class="actions">
-          <mat-form-field appearance="fill">
-            <mat-label>Sport type</mat-label>
-            <input matInput formControlName="sportType" />
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Location</mat-label>
-            <input matInput formControlName="location" />
-          </mat-form-field>
-          <mat-form-field appearance="fill">
-            <mat-label>Start time</mat-label>
-            <input matInput type="datetime-local" formControlName="time" />
-          </mat-form-field>
-          <button mat-flat-button color="primary" type="submit">Host game</button>
-          <button mat-button type="button" (click)="refresh()">Refresh</button>
-        </form>
-        <p class="form-error" *ngIf="message()">{{ message() }}</p>
-      </section>
-
-      <div class="headline">
-        <div>
-          <h2>Active Games Nearby</h2>
-          <p>Built from the activities and join APIs exposed by the gateway.</p>
-        </div>
-      </div>
-
-      <section class="activity-grid">
-        @for (activity of activities(); track activity.id) {
-          <div class="activity-card">
-            <div class="card-media">
-              <img [src]="activityImage(activity.sportType)" [alt]="activity.sportType" />
-            </div>
-            <div class="card-body muted-grid">
-              <div class="actions">
-                <span class="pill-chip active">{{ activity.sportType }}</span>
-                <span class="pill-chip">{{ activity.participantCount }} joined</span>
-              </div>
-              <strong>{{ activity.location }}</strong>
-              <p>{{ activity.time | date:'medium' }}</p>
-              <div class="actions">
-                <button mat-button type="button">Details</button>
-                <button mat-flat-button color="primary" type="button" (click)="join(activity.id)">Join Game</button>
-              </div>
+      <section class="hero-copy-grid">
+        <div class="section-card page-grid">
+          <div class="headline">
+            <div>
+              <span class="inline-label">Player community</span>
+              <h1>Join your next match.</h1>
+              <p>Players can browse public activities and host a game with a cleaner Material-based form.</p>
             </div>
           </div>
-        } @empty {
-          <p>No activities available.</p>
+
+          <form [formGroup]="form" (ngSubmit)="host()" class="form-grid-two">
+            <mat-form-field appearance="outline">
+              <mat-label>Sport type</mat-label>
+              <input matInput formControlName="sportType" placeholder="Football, badminton..." />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Location</mat-label>
+              <input matInput formControlName="location" placeholder="Area or venue" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Start time</mat-label>
+              <input matInput type="datetime-local" formControlName="time" />
+            </mat-form-field>
+            <div class="wide-form-actions">
+              <button mat-flat-button color="primary" type="submit">Host game</button>
+              <button mat-stroked-button type="button" (click)="refresh()">Refresh feed</button>
+            </div>
+          </form>
+
+          <p class="form-error" *ngIf="message()">{{ message() }}</p>
+        </div>
+
+        <div class="media-banner">
+          <img [src]="heroImage()" alt="Activity placeholder" />
+          <div class="media-banner-copy muted-grid">
+            <mat-chip-set>
+              <mat-chip>{{ activities().length }} live activities</mat-chip>
+            </mat-chip-set>
+            <strong>Placeholder activity gallery</strong>
+            <p>All activity cards now show a fallback image until real content is uploaded.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-grid">
+        @for (item of infoCards; track item.title) {
+          <mat-card class="overview-card muted-grid">
+            <div class="info-row">
+              <strong>{{ item.title }}</strong>
+              <mat-icon>{{ item.icon }}</mat-icon>
+            </div>
+            <p>{{ item.caption }}</p>
+          </mat-card>
         }
+      </section>
+
+      <section class="section-card">
+        <div class="section-header">
+          <div class="muted-grid">
+            <h2>Active games nearby</h2>
+            <p>Activity discovery is separated from owner tools and focused on users.</p>
+          </div>
+        </div>
+
+        <section class="activity-grid">
+          @for (activity of activities(); track activity.id) {
+            <mat-card class="activity-card">
+              <div class="card-media">
+                <img [src]="activityImage(activity.sportType)" [alt]="activity.sportType" />
+              </div>
+              <div class="card-body muted-grid">
+                <div class="actions">
+                  <mat-chip-set>
+                    <mat-chip>{{ activity.sportType }}</mat-chip>
+                    <mat-chip>{{ activity.participantCount }} joined</mat-chip>
+                  </mat-chip-set>
+                </div>
+                <strong>{{ activity.location }}</strong>
+                <p>{{ activity.time | date: 'medium' }}</p>
+                <div class="actions">
+                  <button mat-stroked-button type="button">View details</button>
+                  <button mat-flat-button color="primary" type="button" (click)="join(activity.id)">Join game</button>
+                </div>
+              </div>
+            </mat-card>
+          } @empty {
+            <div class="empty-state">
+              <p>No activities available right now.</p>
+            </div>
+          }
+        </section>
       </section>
     </section>
   `
@@ -78,11 +126,20 @@ export class ActivitiesPageComponent {
 
   protected readonly activities = this.store.activities;
   protected readonly message = signal('');
+  protected readonly infoCards = [
+    { title: 'Host public games', caption: 'Create player activities without opening owner pages.', icon: 'event_available' },
+    { title: 'Join faster', caption: 'Clear calls to action keep the activity feed simple.', icon: 'group_add' },
+    { title: 'Replace images later', caption: 'Every activity now has a consistent dummy image.', icon: 'perm_media' },
+    { title: 'User-focused flow', caption: 'This screen is tuned for players, not venue owners.', icon: 'sports_soccer' }
+  ];
+
   protected readonly form = this.fb.nonNullable.group({
     sportType: ['', Validators.required],
     location: ['', Validators.required],
     time: ['', Validators.required]
   });
+
+  protected readonly heroImage = computed(() => sportPlaceholder('Activities Feed', 1200, 800));
 
   protected async refresh(): Promise<void> {
     try {
@@ -117,16 +174,6 @@ export class ActivitiesPageComponent {
   }
 
   protected activityImage(sportType: string): string {
-    const sport = sportType.toLowerCase();
-    if (sport.includes('basket')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuCokDEI6QI64KEGOtXub8-bfAcIO8DfEZUyHY4ck9DKVHo4L8scqKkwQfOQwwESnvyMLBfLDizQcbYpMPkTAlOY1EcWoZZR4ps-7z9CvIg-3BRdI7htO740QfYjnNVLRvtOzKB_u_8VICMwhlDXDxAERqN46KlB23CW2e1li75rRIPAR_gm2hkCDJV6kn2kSFamqkhS9B7VmnjkFAvys0c3YY988ozdXXwfVDndOnXNRyOur8r5S-fvlSKe2MrHno-2_H6JFeIRgcs';
-    }
-    if (sport.includes('football') || sport.includes('soccer')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuCTb4ajHV8KcwxsRtUcOYsW7uNqQv4D0csf6Iysht9uHrNv7kxbwCwn8pkFb3vS52GiNSG4MWCyQYPBnETgjwmfRAVU28WwmSulbDTzDTwLC-KObt8rzfa9rjAL2Wr_PNdnddNiUZZMVTMrSP52LxgVA70NvS2isUe4dc5f3cOfINttvMVNh5g1Zcv2_DFGHdeeDvnKH7lA3kcBhBr_iinWjwMgX2_zIc2-vlqTBUsNgHZV_O8si7ZkGpgWJydDW9xXwl63fhi5p6w';
-    }
-    if (sport.includes('tennis') || sport.includes('badminton')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuDJ4bqU22khoitQELC-IJ4hk2y1oJsxgGMBt4UdJ2x6xzmKmpSBGnDQ392z6aAfyLNN1QZBPqmpZxd2g2RMmS9FAUPJ8JM6a_VQVch6jzFFrb_-_spg2O9kfl3XNLrSkh4U2S2yCjJPM5ihKa_GfUu7iyFMR0M0spnjlY6n8Q6yyAjPxutg4Pv5esLGawaed6aXB4Y279kDMwLrYR0P4bm1yJ8SFQOZiRH-rnhJeuZFYbuMXSJ8p07DiCh5IhtZClqap-v8LhLpC8M';
-    }
-    return 'https://placehold.co/900x600/e2f9ed/006d39?text=FairPlay+Activity';
+    return sportPlaceholder(sportType || 'Activity', 900, 600);
   }
 }

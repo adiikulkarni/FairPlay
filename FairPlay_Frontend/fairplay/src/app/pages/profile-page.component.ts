@@ -3,51 +3,68 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Role } from '../models';
+import { placeholderImage } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-profile-page',
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatSelectModule
+  ],
   template: `
     <section class="page-grid">
       <div class="headline">
         <div>
           <h1>Profile</h1>
-          <p>Update the user information used across bookings, activities, and owner operations.</p>
+          <p>Account details stay editable here while player and owner workspaces remain separate.</p>
         </div>
       </div>
 
       <div class="profile-grid">
-        <div class="profile-summary muted-grid" *ngIf="currentUser()">
+        <mat-card class="profile-summary muted-grid" *ngIf="currentUser()">
+          <img class="avatar-image" [src]="avatarImage()" alt="Profile placeholder" />
           <div class="profile-avatar">{{ initials() }}</div>
           <strong>{{ currentUser()!.name }}</strong>
           <p>{{ currentUser()!.email }}</p>
-          <span class="pill-chip active">{{ currentUser()!.role }}</span>
-        </div>
+          <mat-chip-set>
+            <mat-chip>{{ currentUser()!.role === 'OWNER' ? 'Owner' : 'Player' }}</mat-chip>
+          </mat-chip-set>
+          <p>{{ currentUser()!.role === 'OWNER' ? 'Owner console access enabled.' : 'Player booking access enabled.' }}</p>
+        </mat-card>
 
-        <div class="section-card">
+        <mat-card class="section-card">
           @if (currentUser()) {
-            <form [formGroup]="form" (ngSubmit)="submit()">
-              <mat-form-field appearance="fill">
+            <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid-two">
+              <mat-form-field appearance="outline">
                 <mat-label>Name</mat-label>
                 <input matInput formControlName="name" />
               </mat-form-field>
 
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput type="email" formControlName="email" />
               </mat-form-field>
 
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Phone</mat-label>
                 <input matInput formControlName="phone" />
               </mat-form-field>
 
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Role</mat-label>
                 <mat-select formControlName="role">
                   <mat-option value="USER">Player</mat-option>
@@ -55,13 +72,17 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 </mat-select>
               </mat-form-field>
 
-              <p class="form-error" *ngIf="message()">{{ message() }}</p>
-              <button mat-flat-button color="primary" type="submit">Save changes</button>
+              <div class="wide-form-actions">
+                <button mat-flat-button color="primary" type="submit">Save changes</button>
+              </div>
             </form>
+            <p class="form-error" *ngIf="message()">{{ message() }}</p>
           } @else {
-            <p>Please log in before editing your profile.</p>
+            <div class="empty-state">
+              <p>Please log in before editing your profile.</p>
+            </div>
           }
-        </div>
+        </mat-card>
       </div>
     </section>
   `
@@ -122,5 +143,9 @@ export class ProfilePageComponent {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '')
       .join('');
+  }
+
+  protected avatarImage(): string {
+    return placeholderImage(320, 320, this.currentUser()?.role === 'OWNER' ? 'Owner Avatar' : 'Player Avatar');
   }
 }

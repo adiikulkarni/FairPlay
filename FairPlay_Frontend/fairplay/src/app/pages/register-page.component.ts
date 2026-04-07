@@ -3,11 +3,13 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { Role } from '../models';
+import { placeholderImage } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
@@ -18,6 +20,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
     RouterLink,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule
@@ -25,14 +28,15 @@ import { FairplayStore } from '../services/fairplay-store.service';
   template: `
     <section class="auth-shell">
       <div class="auth-layout">
-        <div
-          class="showcase-panel"
-          [style.background-image]="'url(https://lh3.googleusercontent.com/aida-public/AB6AXuCGSzcjJPP0AxvmDoUIZzv6YdFR0a07v2SHwbtcgQy8DN6nxPY2_JEoxvC9XMz-potlOQtRIuYaAtzaUf4DZjzQlmyZIAcxgJdB0DXk5GBDr3rrixmiSys76qCRnMVhQVB0ApZRu0Z99dv8v-H2_enWyilmkOMrOiEBYJ9k4RLe-hAI6u2uyZlf962BW5Wf1u9xFkZM-N3g_NLlPaNVAdSSelStFBOuqmEUXjMTfjSG6N80yGx3s0WDIm3zDnRG3bnaUPhERnIoqrg)'"
-        >
+        <div class="showcase-panel" [style.background-image]="'url(' + heroImage + ')'">
           <div class="showcase-copy">
             <span class="inline-label">Create account</span>
-            <h1>Join the FairPlay network.</h1>
-            <p>Register as a player or owner and start using the live user, booking, and venue APIs.</p>
+            <h1>Register as player or owner.</h1>
+            <p>The role split starts here so each user lands in the correct interface after signup.</p>
+            <mat-chip-set>
+              <mat-chip>Player journey</mat-chip>
+              <mat-chip>Owner journey</mat-chip>
+            </mat-chip-set>
           </div>
         </div>
 
@@ -42,22 +46,22 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <p>Create a player or owner account</p>
           </div>
           <form [formGroup]="form" (ngSubmit)="submit()">
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Name</mat-label>
               <input matInput formControlName="name" />
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
               <input matInput type="email" formControlName="email" />
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Phone</mat-label>
               <input matInput formControlName="phone" />
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Role</mat-label>
               <mat-select formControlName="role">
                 <mat-option value="USER">Player</mat-option>
@@ -65,7 +69,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
               </mat-select>
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Password</mat-label>
               <input matInput type="password" formControlName="password" />
             </mat-form-field>
@@ -84,6 +88,7 @@ export class RegisterPageComponent {
   private readonly store = inject(FairplayStore);
   private readonly router = inject(Router);
 
+  protected readonly heroImage = placeholderImage(1200, 900, 'FairPlay Register');
   protected readonly message = signal('');
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],

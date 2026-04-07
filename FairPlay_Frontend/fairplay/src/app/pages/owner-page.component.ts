@@ -3,45 +3,80 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-owner-page',
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule
+  ],
   template: `
     <section class="page-grid">
-      <div class="headline">
-        <div>
-          <h1>Venue Overview</h1>
-          <p>Live owner metrics, bookings, and venue publishing connected to the owner dashboard and venues APIs.</p>
-        </div>
-        <div class="actions">
-          <button mat-button type="button" (click)="refresh()">Update availability</button>
-          <button mat-flat-button color="primary" type="button" (click)="createVenue()">Add New Court</button>
-        </div>
-      </div>
+      <section class="hero-copy-grid">
+        <div class="hero-panel page-grid">
+          <div class="headline">
+            <div>
+              <span class="inline-label">Owner dashboard</span>
+              <h1>Manage venues without mixing player flows.</h1>
+              <p>Owner actions stay in one dedicated workspace for metrics, publishing, and revenue visibility.</p>
+            </div>
+          </div>
 
-      <section class="kpi-grid">
+          <div class="actions">
+            <button mat-flat-button color="primary" type="button" (click)="refresh()">Refresh metrics</button>
+            <button mat-stroked-button type="button" (click)="createVenue()">Publish venue</button>
+          </div>
+
+          <div class="surface-note">Owner role UI is intentionally separate from the player booking and activities screens.</div>
+        </div>
+
+        <div class="media-banner">
+          <img [src]="heroImage" alt="Owner dashboard placeholder" />
+          <div class="media-banner-copy muted-grid">
+            <mat-chip-set>
+              <mat-chip>Owner role</mat-chip>
+            </mat-chip-set>
+            <strong>Placeholder owner imagery</strong>
+            <p>Replace this image later with venue or operations photography.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-grid">
         @for (item of stats(); track item.label) {
-          <div class="kpi-card muted-grid">
-            <div class="stat-label">{{ item.label }}</div>
+          <mat-card class="dashboard-stat muted-grid">
+            <div class="info-row">
+              <div class="stat-label">{{ item.label }}</div>
+              <mat-icon>{{ item.icon }}</mat-icon>
+            </div>
             <div class="stat-value">{{ item.value }}</div>
             <p>{{ item.caption }}</p>
-          </div>
+          </mat-card>
         }
       </section>
 
       <section class="split-layout">
         <div class="page-grid">
-          <div class="section-card">
-            <div class="headline">
-              <div>
-                <h2>Upcoming Bookings</h2>
-                <p>Snapshot of active and cancelled volume from the dashboard service.</p>
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
+                <h2>Operational snapshot</h2>
+                <p>Live owner metrics stay grouped here instead of appearing in user pages.</p>
               </div>
             </div>
+
             <div class="table-list">
               @for (row of bookingRows(); track row.label) {
                 <div class="table-row">
@@ -50,77 +85,71 @@ import { FairplayStore } from '../services/fairplay-store.service';
                     <p>{{ row.subtitle }}</p>
                   </div>
                   <div class="muted-grid">
+                    <mat-chip-set>
+                      <mat-chip>{{ row.status }}</mat-chip>
+                    </mat-chip-set>
                     <strong>{{ row.value }}</strong>
-                    <p>{{ row.status }}</p>
                   </div>
                 </div>
               }
             </div>
-          </div>
+          </section>
 
-          <div class="section-card">
-            <div class="headline">
-              <div>
-                <h2>Venue Management</h2>
-                <p>Create new venue records against the gateway API.</p>
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
+                <h2>Create venue</h2>
+                <p>Material form controls now provide a cleaner publishing flow.</p>
               </div>
             </div>
-            <form [formGroup]="form" (ngSubmit)="createVenue()" class="page-grid">
-              <mat-form-field appearance="fill">
+
+            <form [formGroup]="form" (ngSubmit)="createVenue()" class="form-grid-two">
+              <mat-form-field appearance="outline">
                 <mat-label>Venue name</mat-label>
-                <input matInput formControlName="name" />
+                <input matInput formControlName="name" placeholder="Arena or court name" />
               </mat-form-field>
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Location</mat-label>
-                <input matInput formControlName="location" />
+                <input matInput formControlName="location" placeholder="City or district" />
               </mat-form-field>
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Sport type</mat-label>
-                <input matInput formControlName="sportType" />
+                <input matInput formControlName="sportType" placeholder="Badminton, futsal..." />
               </mat-form-field>
-              <mat-form-field appearance="fill">
+              <mat-form-field appearance="outline">
                 <mat-label>Price per hour</mat-label>
                 <input matInput type="number" min="1" formControlName="pricePerHour" />
               </mat-form-field>
-              <p class="form-error" *ngIf="message()">{{ message() }}</p>
-              <button mat-flat-button color="primary" type="submit">Publish venue</button>
+              <div class="wide-form-actions">
+                <button mat-flat-button color="primary" type="submit">Publish venue</button>
+              </div>
             </form>
-          </div>
+            <p class="form-error" *ngIf="message()">{{ message() }}</p>
+          </section>
         </div>
 
         <div class="page-grid">
-          <div class="section-card muted-grid">
-            <h2>Live Notifications</h2>
-            <div class="table-list">
-              <div class="table-row">
-                <div class="muted-grid">
-                  <strong>Revenue update</strong>
-                  <p>Total earnings synced from the owner dashboard.</p>
+          <section class="cta-grid">
+            @for (item of ownerNotes; track item.title) {
+              <mat-card class="overview-card muted-grid">
+                <div class="info-row">
+                  <strong>{{ item.title }}</strong>
+                  <mat-icon>{{ item.icon }}</mat-icon>
                 </div>
-                <strong>Rs {{ revenue() }}</strong>
-              </div>
-              <div class="table-row">
-                <div class="muted-grid">
-                  <strong>Bookings today</strong>
-                  <p>Active reservations currently tracked.</p>
-                </div>
-                <strong>{{ activeBookings() }}</strong>
-              </div>
-            </div>
-          </div>
+                <p>{{ item.caption }}</p>
+              </mat-card>
+            }
+          </section>
 
-          <div class="venue-card">
+          <mat-card class="venue-card">
             <div class="card-media">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6GKxNLL7feSpBFYPcyf0ZEDy6oT6IZz01tbluiW3UhuN59aGoavLIT9HQwwQ1wJ_YXSUZ7J-X3J_eD83I68dMqKsxpzONxRVzDNlchXVvjcPMeQEh0wVugs3uPPj9ia_AKljQ_Y_RFfmGWAAOoCiWdteYuJiCm-L6ycsJL91atoN93v3sEyn6u4WsUWDxRPOxHwBvbIytTbou2-RzTZSKcK8yp5O1RW4l4_0pFzbyihl-i0dWaDEDm3shMZpBH9JHpz7E4ZPHlVM"
-                alt="Owner venue"
-              />
+              <img [src]="cardImage" alt="Owner venue placeholder" />
             </div>
             <div class="card-body muted-grid">
-              <strong>Peak times</strong>
-              <p>Monitor venue usage and update availability from the owner console.</p>
+              <strong>Owner media card</strong>
+              <p>Another dummy image slot that you can replace with real venue photography later.</p>
             </div>
-          </div>
+          </mat-card>
         </div>
       </section>
     </section>
@@ -131,15 +160,25 @@ export class OwnerPageComponent {
   private readonly store = inject(FairplayStore);
 
   protected readonly message = signal('');
+  protected readonly heroImage = sportPlaceholder('Owner Workspace', 1200, 800);
+  protected readonly cardImage = sportPlaceholder('Venue Operations', 900, 600);
+  protected readonly ownerNotes = [
+    { title: 'Revenue visibility', caption: 'Owner earnings remain visible only in the owner workspace.', icon: 'payments' },
+    { title: 'Role separation', caption: 'Player booking screens and owner management are visually distinct.', icon: 'account_tree' },
+    { title: 'Placeholder ready', caption: 'All owner media slots use dummy imagery for now.', icon: 'image' },
+    { title: 'Fast publishing', caption: 'The create venue form is cleaner and more consistent.', icon: 'publish' }
+  ];
+
   protected readonly stats = computed(() => {
     const dashboard = this.store.ownerDashboard();
     return [
-      { label: 'Total Revenue', value: `Rs ${dashboard?.totalEarnings ?? 0}`, caption: 'Synced from dashboard service' },
-      { label: 'Bookings', value: String(dashboard?.activeBookings ?? 0), caption: 'Active reservations' },
-      { label: 'Occupancy Rate', value: dashboard ? `${Math.min(100, dashboard.activeBookings * 20)}%` : '0%', caption: 'Estimated live load' },
-      { label: 'Avg. Rating', value: '4.9', caption: 'Static design placeholder' }
+      { label: 'Revenue', value: `Rs ${dashboard?.totalEarnings ?? 0}`, caption: 'Synced from dashboard service', icon: 'payments' },
+      { label: 'Active bookings', value: String(dashboard?.activeBookings ?? 0), caption: 'Current confirmed reservations', icon: 'event_available' },
+      { label: 'Cancelled', value: String(dashboard?.cancelledBookings ?? 0), caption: 'Bookings marked cancelled', icon: 'event_busy' },
+      { label: 'Venues', value: String(dashboard?.totalVenues ?? 0), caption: 'Published under this owner', icon: 'storefront' }
     ];
   });
+
   protected readonly bookingRows = computed(() => {
     const dashboard = this.store.ownerDashboard();
     return [
@@ -163,8 +202,6 @@ export class OwnerPageComponent {
       }
     ];
   });
-  protected readonly revenue = computed(() => this.store.ownerDashboard()?.totalEarnings ?? 0);
-  protected readonly activeBookings = computed(() => this.store.ownerDashboard()?.activeBookings ?? 0);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -199,6 +236,7 @@ export class OwnerPageComponent {
         pricePerHour: Number(this.form.controls.pricePerHour.getRawValue())
       });
       this.message.set('Venue created.');
+      this.form.reset({ name: '', location: '', sportType: '', pricePerHour: 1000 });
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Create failed.');
     }

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -13,7 +15,9 @@ import { FairplayStore } from './services/fairplay-store.service';
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
+    MatBadgeModule,
     MatButtonModule,
+    MatChipsModule,
     MatIconModule,
     MatToolbarModule
   ],
@@ -29,19 +33,25 @@ export class App {
     const user = this.currentUser();
     if (!user) {
       return [
-        { label: 'Explore', path: '/', exact: true },
-        { label: 'Host', path: '/register', exact: false },
-        { label: 'Activity', path: '/login', exact: false }
+        { label: 'Home', path: '/', exact: true, icon: 'home' },
+        { label: 'Login', path: '/login', exact: false, icon: 'login' },
+        { label: 'Register', path: '/register', exact: false, icon: 'person_add' }
+      ];
+    }
+
+    if (user.role === 'OWNER') {
+      return [
+        { label: 'Home', path: '/', exact: true, icon: 'home' },
+        { label: 'Owner Hub', path: '/owner', exact: false, icon: 'dashboard_customize' },
+        { label: 'Profile', path: '/profile', exact: false, icon: 'manage_accounts' }
       ];
     }
 
     return [
-      { label: 'Explore', path: '/', exact: true },
-      ...(user.role === 'OWNER'
-        ? [{ label: 'Host', path: '/owner', exact: false }]
-        : [{ label: 'Host', path: '/venues', exact: false }]),
-      { label: 'Activity', path: '/activities', exact: false },
-      { label: 'Bookings', path: '/venues', exact: false }
+      { label: 'Home', path: '/', exact: true, icon: 'home' },
+      { label: 'Venues', path: '/venues', exact: false, icon: 'stadium' },
+      { label: 'Activities', path: '/activities', exact: false, icon: 'groups' },
+      { label: 'Profile', path: '/profile', exact: false, icon: 'person' }
     ];
   });
 
@@ -49,4 +59,6 @@ export class App {
     const user = this.currentUser();
     return user ? `${user.name} (${user.role})` : 'Guest';
   });
+
+  protected readonly roleLabel = computed(() => (this.currentUser()?.role === 'OWNER' ? 'Owner' : 'Player'));
 }

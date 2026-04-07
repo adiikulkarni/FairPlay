@@ -2,185 +2,322 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
+import { placeholderImage, sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatButtonModule, MatCardModule, DecimalPipe],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatIconModule,
+    DecimalPipe,
+  ],
   template: `
     <section class="page-grid">
-      <section class="split-layout">
-        <div class="headline">
-          <div>
-            <span class="inline-label">Premium sports booking</span>
-            <h1>Play More.<br /><br/>Wait Less.</h1>
-            <p>
-              Browse venues, join upcoming activities, and manage your bookings with the live FairPlay gateway flows.
-            </p>
+      <section class="hero-copy-grid">
+        <div class="hero-panel page-grid">
+          <div class="headline">
+            <div>
+              <span class="inline-label">{{
+                currentUser() ? roleTitle() : 'FairPlay platform'
+              }}</span>
+              <h1>{{ heroTitle() }}</h1>
+              <p>{{ heroText() }}</p>
+            </div>
           </div>
+
           <div class="actions">
-            <a mat-flat-button color="primary" routerLink="/venues">
-              {{ currentUser() ? 'Book now' : 'Explore venues' }}
-            </a>
-            <a mat-button routerLink="/activities">
-              {{ currentUser() ? 'Browse activities' : 'See activities' }}
-            </a>
+            <a mat-flat-button color="primary" [routerLink]="primaryAction().link">{{
+              primaryAction().label
+            }}</a>
+            <a mat-stroked-button [routerLink]="secondaryAction().link">{{
+              secondaryAction().label
+            }}</a>
           </div>
+
+          <div class="surface-note">{{ roleNote() }}</div>
         </div>
 
-        <div class="hero-panel">
-          <div class="surface-note">
-            {{ currentUser()
-              ? 'Signed in and ready to play.'
-              : 'Login to unlock bookings, profile updates, and owner tools.' }}
+        <div class="media-banner">
+          <img [src]="heroImage()" alt="FairPlay hero banner" />
+          <div class="media-banner-copy muted-grid">
+            <mat-chip-set>
+              <mat-chip>{{ currentUser()?.role ?? 'Guest' }}</mat-chip>
+            </mat-chip-set>
+            <strong>{{ heroHighlightTitle() }}</strong>
+            <p>{{ heroHighlightText() }}</p>
           </div>
         </div>
       </section>
 
-      <section class="media-grid">
-        <div class="hero-media">
-          <img [src]="heroImage" alt="Indoor badminton court" />
-        </div>
-
-        @for (sport of sportTiles; track sport.name) {
-          <div>
-            <img [src]="sport.image" [alt]="sport.name" />
-            <div class="media-label">
-              <strong>{{ sport.name }}</strong>
-              <p>{{ sport.subtitle }}</p>
-            </div>
-          </div>
-        }
-      </section>
-
-      <section class="stats-grid app-stats">
+      <section class="metrics-grid">
         @for (item of stats(); track item.label) {
-          <mat-card>
+          <mat-card class="dashboard-stat muted-grid">
+            <div class="info-row">
+              <div class="stat-label">{{ item.label }}</div>
+              <mat-icon>{{ item.icon }}</mat-icon>
+            </div>
             <div class="stat-value">{{ item.value }}</div>
-            <div class="stat-label">{{ item.label }}</div>
+            <p>{{ item.caption }}</p>
           </mat-card>
         }
       </section>
 
-      <section class="headline">
-        <div>
-          <h2>Featured Venues</h2>
-          <p>Top live venues pulled from your backend inventory.</p>
+      <section class="role-panels">
+        <mat-card class="role-card muted-grid">
+          <span class="inline-label">Player space</span>
+          <h2>Bookings and activities stay focused for users.</h2>
+          <p>
+            Venue discovery, joining games, and personal bookings now live in a distinct player
+            flow.
+          </p>
+          <div class="actions">
+            <a mat-button routerLink="/venues">Browse venues</a>
+            <a mat-button routerLink="/activities">Community games</a>
+          </div>
+        </mat-card>
+
+        <mat-card class="role-card muted-grid">
+          <span class="inline-label">Owner space</span>
+          <h2>Owner tools stay separate from player actions.</h2>
+          <p>
+            Venue publishing, revenue metrics, and dashboard actions remain contained in the owner
+            workspace.
+          </p>
+          <div class="actions">
+            <a mat-button routerLink="/owner">Owner dashboard</a>
+            <a mat-button routerLink="/profile">Account settings</a>
+          </div>
+        </mat-card>
+      </section>
+
+      <section class="section-card">
+        <div class="section-header">
+          <div class="muted-grid">
+            <h2>Featured venues</h2>
+            <p>Dummy imagery is in place for every card so you can swap real assets later.</p>
+          </div>
+        </div>
+
+        <div class="tile-grid">
+          @for (venue of featuredVenues(); track venue.id) {
+            <mat-card class="venue-card">
+              <div class="card-media">
+                <img [src]="venueImage(venue.sportType)" [alt]="venue.name" />
+              </div>
+              <div class="card-body muted-grid">
+                <strong>{{ venue.name }}</strong>
+                <p>{{ venue.location }}</p>
+                <div class="actions">
+                  <mat-chip-set>
+                    <mat-chip>{{ venue.sportType }}</mat-chip>
+                    <mat-chip>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hr</mat-chip>
+                  </mat-chip-set>
+                </div>
+                <a mat-flat-button color="primary" routerLink="/venues">Open venue</a>
+              </div>
+            </mat-card>
+          } @empty {
+            <div class="empty-state">
+              <p>No venues have loaded yet. Start the backend and refresh to see live cards.</p>
+            </div>
+          }
         </div>
       </section>
 
-      <section class="feature-grid">
-        @for (venue of featuredVenues(); track venue.id) {
-          <mat-card class="venue-card">
-            <div class="card-media">
-              <img [src]="venueImage(venue.sportType)" [alt]="venue.name" />
+      <section class="quick-links-grid">
+        @for (item of quickLinks(); track item.title) {
+          <mat-card class="quick-link-card muted-grid">
+            <div class="info-row">
+              <strong>{{ item.title }}</strong>
+              <mat-icon>{{ item.icon }}</mat-icon>
             </div>
-            <div class="card-body muted-grid">
-              <strong>{{ venue.name }}</strong>
-              <p>{{ venue.location }}</p>
-              <div class="actions">
-                <span class="pill-chip active">{{ venue.sportType }}</span>
-                <span class="pill-chip">
-                  Rs {{ venue.pricePerHour | number: '1.0-0' }}/hr
-                </span>
-              </div>
-              <a mat-button routerLink="/venues">Book now</a>
-            </div>
+            <p>{{ item.copy }}</p>
+            <a mat-button [routerLink]="item.link">{{ item.action }}</a>
           </mat-card>
         }
-      </section>
-
-      <section class="feature-grid">
-        <mat-card class="feature-card muted-grid">
-          <strong>Discover</strong>
-          <p>Search venues based on location and schedule.</p>
-        </mat-card>
-
-        <mat-card class="feature-card muted-grid">
-          <strong>Join</strong>
-          <p>Find and join community sports activities.</p>
-        </mat-card>
-
-        <mat-card class="feature-card muted-grid">
-          <strong>Book</strong>
-          <p>Reserve venue slots instantly.</p>
-        </mat-card>
       </section>
     </section>
-  `
+  `,
 })
 export class DashboardPageComponent {
   private readonly store = inject(FairplayStore);
 
   protected readonly currentUser = this.store.currentUser;
 
-  protected readonly stats = computed((): { label: string; value: string }[] => {
-    const baseStats = [
-      { label: 'Venues', value: String(this.store.venues().length) },
-      { label: 'Activities', value: String(this.store.activities().length) },
-      { label: 'Bookings', value: String(this.store.bookings().length) }
+  protected readonly stats = computed(() => {
+    const user = this.currentUser();
+    const base = [
+      {
+        label: 'Live Venues',
+        value: String(this.store.venues().length),
+        icon: 'stadium',
+        caption: 'Connected to venue inventory',
+      },
+      {
+        label: 'Open Activities',
+        value: String(this.store.activities().length),
+        icon: 'groups',
+        caption: 'Community matches available',
+      },
+      {
+        label: user?.role === 'OWNER' ? 'Managed Bookings' : 'Your Bookings',
+        value: String(this.store.bookings().length),
+        icon: 'confirmation_number',
+        caption:
+          user?.role === 'OWNER' ? 'Owner dashboard reservations' : 'Personal booking history',
+      },
     ];
 
-    if (this.currentUser()?.role === 'OWNER') {
-      baseStats.push({
-        label: 'Owner revenue',
-        value: this.store.ownerDashboard()
-          ? `Rs ${this.store.ownerDashboard()!.totalEarnings}`
-          : 'Rs 0'
+    if (user?.role === 'OWNER') {
+      base.push({
+        label: 'Revenue',
+        value: `Rs ${this.store.ownerDashboard()?.totalEarnings ?? 0}`,
+        icon: 'payments',
+        caption: 'Live dashboard earnings',
+      });
+    } else {
+      base.push({
+        label: 'Role',
+        value: user ? 'Player' : 'Guest',
+        icon: 'badge',
+        caption: user ? 'User workspace enabled' : 'Login to unlock actions',
       });
     }
 
-    return baseStats;
+    return base;
   });
 
-  protected readonly featuredVenues = computed(() =>
-    this.store.venues().slice(0, 3)
+  protected readonly featuredVenues = computed(() => this.store.venues().slice(0, 3));
+
+  protected readonly quickLinks = computed(() => {
+    const user = this.currentUser();
+    if (user?.role === 'OWNER') {
+      return [
+        {
+          title: 'Publish venues',
+          copy: 'Add new courts and spaces from the owner dashboard.',
+          icon: 'add_business',
+          link: '/owner',
+          action: 'Manage venues',
+        },
+        {
+          title: 'Monitor revenue',
+          copy: 'Track booking performance without mixing it into user flows.',
+          icon: 'monitoring',
+          link: '/owner',
+          action: 'View metrics',
+        },
+        {
+          title: 'Update account',
+          copy: 'Keep owner contact details current.',
+          icon: 'manage_accounts',
+          link: '/profile',
+          action: 'Edit profile',
+        },
+      ];
+    }
+
+    return [
+      {
+        title: 'Find venues',
+        copy: 'Search by location and sport before booking.',
+        icon: 'travel_explore',
+        link: '/venues',
+        action: 'Explore venues',
+      },
+      {
+        title: 'Join activities',
+        copy: 'Browse player-hosted games and join quickly.',
+        icon: 'sports',
+        link: '/activities',
+        action: 'Browse activities',
+      },
+      {
+        title: 'Create account',
+        copy: 'Register as a player or owner with separate role paths.',
+        icon: 'person_add',
+        link: user ? '/profile' : '/register',
+        action: user ? 'View profile' : 'Register now',
+      },
+    ];
+  });
+
+  protected readonly primaryAction = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? { label: 'Open owner dashboard', link: '/owner' }
+      : {
+          label: this.currentUser() ? 'Browse venues' : 'Create account',
+          link: this.currentUser() ? '/venues' : '/register',
+        },
   );
 
-  protected readonly heroImage =
-    'https://placehold.co/1200x600?text=Sports+Venue';
+  protected readonly secondaryAction = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? { label: 'Review profile', link: '/profile' }
+      : {
+          label: this.currentUser() ? 'Browse activities' : 'Login',
+          link: this.currentUser() ? '/activities' : '/login',
+        },
+  );
 
-  protected readonly sportTiles = [
-    {
-      name: 'Football',
-      subtitle: 'Turf and open grounds',
-      image: 'https://placehold.co/300x200?text=Football'
-    },
-    {
-      name: 'Cricket',
-      subtitle: 'Practice nets and fields',
-      image: 'https://placehold.co/300x200?text=Cricket'
-    },
-    {
-      name: 'Swimming',
-      subtitle: 'Aquatic venues',
-      image: 'https://placehold.co/300x200?text=Swimming'
-    },
-    {
-      name: 'Basketball',
-      subtitle: 'Indoor courts',
-      image: 'https://placehold.co/300x200?text=Basketball'
+  protected readonly roleTitle = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? 'Owner workspace' : 'Player workspace',
+  );
+
+  protected readonly heroTitle = computed(() => {
+    if (this.currentUser()?.role === 'OWNER') {
+      return 'Manage your venues with a cleaner owner dashboard.';
     }
-  ];
+    if (this.currentUser()) {
+      return 'Book faster with a cleaner player experience.';
+    }
+    return 'Discover sports spaces, activities, and separate role journeys.';
+  });
+
+  protected readonly heroText = computed(() => {
+    if (this.currentUser()?.role === 'OWNER') {
+      return 'Owner actions now stay focused on venue publishing, revenue, and booking oversight instead of sharing UI with player tools.';
+    }
+    if (this.currentUser()) {
+      return 'Players get a dedicated flow for venue discovery, bookings, and community activities without owner-only noise.';
+    }
+    return 'Use placeholder images now, then replace them later with venue and activity photos once your content is ready.';
+  });
+
+  protected readonly roleNote = computed(() => {
+    if (this.currentUser()?.role === 'OWNER') {
+      return 'Owner role detected. Owner-only navigation and metrics are active.';
+    }
+    if (this.currentUser()) {
+      return 'Player role detected. Venue booking and activities are prioritized.';
+    }
+    return 'Guest mode active. Register as Player or Owner to unlock separate experiences.';
+  });
+
+  protected readonly heroHighlightTitle = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? 'Owner tools' : 'Player discovery',
+  );
+
+  protected readonly heroHighlightText = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? 'Venue operations, placeholder imagery, and revenue cards are grouped into one owner space.'
+      : 'Venue discovery, community games, and profile management use a cleaner Material layout.',
+  );
+
+  protected readonly heroImage = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? '/home.png' : '/home.png',
+  );
 
   protected venueImage(sportType: string): string {
-    const sport = sportType.toLowerCase();
-
-    if (sport.includes('badminton') || sport.includes('tennis')) {
-      return 'https://placehold.co/600x400?text=Badminton';
-    }
-    if (sport.includes('football')) {
-      return 'https://placehold.co/600x400?text=Football';
-    }
-    if (sport.includes('cricket')) {
-      return 'https://placehold.co/600x400?text=Cricket';
-    }
-    if (sport.includes('swim')) {
-      return 'https://placehold.co/600x400?text=Swimming';
-    }
-
-    return 'https://placehold.co/600x400?text=Venue';
+    return sportPlaceholder(sportType || 'Venue', 900, 600);
   }
 }

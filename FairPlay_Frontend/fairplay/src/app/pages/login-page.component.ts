@@ -3,25 +3,28 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
+import { placeholderImage } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-login-page',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatChipsModule, MatFormFieldModule, MatInputModule],
   template: `
     <section class="auth-shell">
       <div class="auth-layout">
-        <div
-          class="showcase-panel"
-          [style.background-image]="'url(https://lh3.googleusercontent.com/aida-public/AB6AXuCKZgQtz1bBk8eGqqqKBMNRnepQm7NfGjAwozJWTGfYtLw-e9oyTUAwtfRpH7UU6syHudgPqyOQM1eQm3yd7RP-ZNyKxbC43_XHPOL0hKxwKK1R3ni8LfAFyyIjau89Z4Gcu7D8X84sH-hVFofZOmcss5-af6w72aahTKRJcJ9Hgn1pXE5OhkUA21bRnVpwrzERLDSCXxVTETtyzq9nEK4wZTZQ9k9H52xPWvTEbKX8UlN4Iw8Ndo-58nvGPTzBzUplx3_PRu-fZwA)'"
-        >
+        <div class="showcase-panel" [style.background-image]="'url(' + heroImage + ')'">
           <div class="showcase-copy">
             <span class="inline-label">FairPlay access</span>
-            <h1>Sign in and get back on court.</h1>
-            <p>Use your registered account to access venues, activities, profile updates, and owner tools.</p>
+            <h1>Sign in to the right role workspace.</h1>
+            <p>Players and owners share authentication, but the UI paths stay separate after login.</p>
+            <mat-chip-set>
+              <mat-chip>Player bookings</mat-chip>
+              <mat-chip>Owner dashboard</mat-chip>
+            </mat-chip-set>
           </div>
         </div>
 
@@ -31,12 +34,12 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <p>Access your FairPlay account</p>
           </div>
           <form [formGroup]="form" (ngSubmit)="submit()">
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
               <input matInput type="email" formControlName="email" />
             </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="outline">
               <mat-label>Password</mat-label>
               <input matInput type="password" formControlName="password" />
             </mat-form-field>
@@ -54,6 +57,7 @@ export class LoginPageComponent {
   private readonly store = inject(FairplayStore);
   private readonly router = inject(Router);
 
+  protected readonly heroImage = placeholderImage(1200, 900, 'FairPlay Login');
   protected readonly message = signal('');
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

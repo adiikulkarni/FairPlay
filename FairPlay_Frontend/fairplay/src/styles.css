@@ -4,6 +4,8 @@
 :root {
   --primary: #006d39;
   --primary-container: #00b562;
+  --secondary: #0f6f64;
+  --accent: #ffb300;
   --surface: #e8fff3;
   --surface-container: #ddf3e7;
   --surface-container-low: #e2f9ed;
@@ -60,6 +62,10 @@ mat-card {
   border: 0;
 }
 
+.mat-mdc-card {
+  --mdc-elevated-card-container-color: var(--surface-container-lowest);
+}
+
 .page-grid {
   display: grid;
   gap: 2rem;
@@ -78,6 +84,11 @@ mat-card {
   letter-spacing: -0.06em;
 }
 
+.headline h2 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -94,7 +105,11 @@ mat-card {
 .hero-panel {
   padding: 2.2rem;
   border-radius: 2rem;
-  background: linear-gradient(135deg, rgba(232, 255, 243, 0.7), rgba(221, 243, 231, 0.8));
+  background:
+    linear-gradient(155deg, rgba(8, 78, 49, 0.96), rgba(9, 101, 69, 0.84)),
+    linear-gradient(135deg, rgba(232, 255, 243, 0.7), rgba(221, 243, 231, 0.8));
+  color: #ffffff;
+  box-shadow: 0 24px 48px rgba(0, 109, 57, 0.14);
 }
 
 .inline-label {
@@ -154,6 +169,142 @@ mat-card {
   box-shadow: var(--shadow-soft);
 }
 
+.hero-copy-grid,
+.quick-links-grid,
+.metrics-grid,
+.role-panels,
+.cta-grid,
+.tile-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero-copy-grid {
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.95fr);
+  align-items: stretch;
+}
+
+.quick-links-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.role-panels {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tile-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-stat,
+.quick-link-card,
+.overview-card,
+.role-card,
+.cta-card {
+  height: 100%;
+}
+
+.dashboard-stat {
+  padding: 1.35rem;
+}
+
+.quick-link-card,
+.overview-card,
+.role-card,
+.cta-card {
+  padding: 1.5rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.media-banner {
+  min-height: 260px;
+  border-radius: 2rem;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface-container-high);
+}
+
+.media-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.media-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 31, 24, 0.08), rgba(12, 31, 24, 0.56));
+}
+
+.media-banner-copy {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 1;
+  color: #fff;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-header:last-child {
+  margin-bottom: 0;
+}
+
+.status-chip {
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 1.4rem;
+  border-radius: 1.25rem;
+  background: var(--surface-container-low);
+}
+
+.form-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.avatar-image {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 24px rgba(0, 109, 57, 0.14);
+}
+
+.wide-form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .list-card {
   padding: 1rem 0;
 }
@@ -166,8 +317,8 @@ mat-card {
 .surface-note {
   padding: 1rem 1.2rem;
   border-radius: 1rem;
-  background: var(--surface-container-low);
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .form-card form,
@@ -397,6 +548,7 @@ mat-card {
   padding: 1rem 1.1rem;
   border-radius: 1.2rem;
   background: var(--surface-container-lowest);
+  border: 1px solid rgba(188, 202, 187, 0.24);
 }
 
 .venue-card {
@@ -444,11 +596,18 @@ mat-card {
   .split-layout,
   .profile-grid,
   .auth-layout,
+  .hero-copy-grid,
   .feature-grid,
   .activity-grid,
   .kpi-grid,
   .stats-grid,
-  .amenities-grid {
+  .amenities-grid,
+  .metrics-grid,
+  .quick-links-grid,
+  .role-panels,
+  .cta-grid,
+  .tile-grid,
+  .form-grid-two {
     grid-template-columns: 1fr;
   }
 
@@ -480,5 +639,12 @@ mat-card {
   .media-grid,
   .time-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-header,
+  .info-row,
+  .table-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

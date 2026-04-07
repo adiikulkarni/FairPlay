@@ -1,6 +1,9 @@
 <div class="app-shell">
   <mat-toolbar class="topbar">
-    <a class="brand" routerLink="/">FairPlay</a>
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">FP</span>
+      <span>FairPlay</span>
+    </a>
 
     <nav class="main-nav">
       @for (item of navItems(); track item.label) {
@@ -10,6 +13,7 @@
           routerLinkActive="active-link"
           [routerLinkActiveOptions]="{ exact: item.exact }"
         >
+          <mat-icon>{{ item.icon }}</mat-icon>
           {{ item.label }}
         </a>
       }
@@ -18,8 +22,11 @@
     <div class="toolbar-spacer"></div>
 
     <div class="session-search" *ngIf="currentUser()">
-      <mat-icon>search</mat-icon>
-      <span>{{ sessionLabel() }}</span>
+      <mat-icon>{{ currentUser()!.role === 'OWNER' ? 'storefront' : 'sports_soccer' }}</mat-icon>
+      <div class="session-copy">
+        <strong>{{ currentUser()!.name }}</strong>
+        <span>{{ roleLabel() }} workspace</span>
+      </div>
     </div>
 
     <div class="toolbar-actions" *ngIf="!currentUser(); else userActions">
@@ -28,6 +35,9 @@
     </div>
 
     <ng-template #userActions>
+      <mat-chip-set aria-label="Current role">
+        <mat-chip class="role-chip">{{ roleLabel() }}</mat-chip>
+      </mat-chip-set>
       <a class="icon-btn" routerLink="/profile" aria-label="Profile">
         <mat-icon>account_circle</mat-icon>
       </a>

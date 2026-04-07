@@ -1,12 +1,15 @@
-import {CommonModule, DatePipe, DecimalPipe} from '@angular/common';
-import {Component, computed, inject, signal} from '@angular/core';
-import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
-import {MatButtonModule} from '@angular/material/button';
-import {MatCardModule} from '@angular/material/card';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import {FairplayStore} from '../services/fairplay-store.service';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { placeholderImage, sportPlaceholder } from '../placeholder-images';
+import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
   selector: 'app-venues-page',
@@ -15,7 +18,9 @@ import {FairplayStore} from '../services/fairplay-store.service';
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
     DecimalPipe,
@@ -23,150 +28,167 @@ import {FairplayStore} from '../services/fairplay-store.service';
   ],
   template: `
     <section class="page-grid">
-      <section class="media-grid">
-        <div class="hero-media">
-          <img [src]="selectedVenueImage()" [alt]="selectedVenue() ? selectedVenue()!.name : 'Venue'"/>
+      <section class="hero-copy-grid">
+        <div class="section-card page-grid">
+          <div class="headline">
+            <div>
+              <span class="inline-label">Player booking zone</span>
+              <h1>{{ selectedVenueName() }}</h1>
+              <p>{{ selectedVenueLocation() }}</p>
+            </div>
+          </div>
+
+          <form [formGroup]="filterForm" (ngSubmit)="search()" class="form-grid-two">
+            <mat-form-field appearance="outline">
+              <mat-label>Location</mat-label>
+              <input matInput formControlName="location" placeholder="City or area" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Sport type</mat-label>
+              <input matInput formControlName="sportType" placeholder="Badminton, football..." />
+            </mat-form-field>
+            <div class="wide-form-actions">
+              <button mat-flat-button color="primary" type="submit">Search venues</button>
+              <button mat-stroked-button type="button" (click)="resetFilters()">Clear filters</button>
+            </div>
+          </form>
+
+          <div class="cta-grid">
+            @for (item of highlights; track item.title) {
+              <mat-card class="cta-card muted-grid">
+                <div class="info-row">
+                  <strong>{{ item.title }}</strong>
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                </div>
+                <p>{{ item.caption }}</p>
+              </mat-card>
+            }
+          </div>
         </div>
-        <div><img [src]="galleryImages[0]" alt="Venue detail"/></div>
-        <div><img [src]="galleryImages[1]" alt="Venue lobby"/></div>
-        <div><img [src]="galleryImages[2]" alt="Court detail"/></div>
+
+        <div class="media-banner">
+          <img [src]="selectedVenueImage()" [alt]="selectedVenueName()" />
+          <div class="media-banner-copy muted-grid">
+            <mat-chip-set>
+              <mat-chip>{{ selectedVenueSport() }}</mat-chip>
+              <mat-chip>Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hr</mat-chip>
+            </mat-chip-set>
+            <strong>{{ selectedVenueName() }}</strong>
+            <p>{{ selectedVenue() ? 'Placeholder venue image ready to replace later.' : 'Live venue details will appear here once loaded.' }}</p>
+          </div>
+        </div>
       </section>
 
       <section class="split-layout">
         <div class="page-grid">
-          <div class="headline">
-            <div>
-              <span class="inline-label">Premium partner</span>
-              <h1>{{ selectedVenue() ? selectedVenue()!.name : 'Explore Venues' }}</h1>
-              <p>{{ selectedVenue() ? selectedVenue()!.location : 'Choose a venue to view live details and booking options.' }}</p>
-            </div>
-          </div>
-
-          <div class="section-card">
-            <form [formGroup]="filterForm" (ngSubmit)="search()" class="actions">
-              <mat-form-field appearance="fill">
-                <mat-label>Location</mat-label>
-                <input matInput formControlName="location"/>
-              </mat-form-field>
-              <mat-form-field appearance="fill">
-                <mat-label>Sport type</mat-label>
-                <input matInput formControlName="sportType"/>
-              </mat-form-field>
-              <button mat-flat-button color="primary" type="submit">Search</button>
-              <button mat-button type="button" (click)="resetFilters()">Reset</button>
-            </form>
-          </div>
-
-          <div class="section-card muted-grid">
-            <h2>About this venue</h2>
-            <p>
-              FairPlay venue pages are powered by the live venues and bookings APIs. Pick a venue, choose a time,
-              and create a booking directly from this page.
-            </p>
-          </div>
-
-          <div class="amenities-grid">
-            @for (item of amenities; track item.title) {
-              <div class="amenity-card muted-grid">
-                <strong>{{ item.title }}</strong>
-                <p>{{ item.caption }}</p>
-              </div>
-            }
-          </div>
-
-          <div class="section-card">
-            <div class="headline">
-              <div>
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
                 <h2>Available venues</h2>
-                <p>Live inventory from the venue service.</p>
+                <p>Each venue card now uses a dummy image until you replace it with real photography.</p>
               </div>
+              <mat-chip-set>
+                <mat-chip>{{ venues().length }} venues</mat-chip>
+              </mat-chip-set>
             </div>
+
             <div class="centered" *ngIf="loadingVenues()">
-              <mat-spinner diameter="32"></mat-spinner>
+              <mat-spinner diameter="36"></mat-spinner>
             </div>
-            <div class="card-list" *ngIf="!loadingVenues()">
+
+            <div class="tile-grid" *ngIf="!loadingVenues()">
               @for (venue of venues(); track venue.id) {
-                <div class="table-row">
-                  <div class="muted-grid">
-                    <strong>{{ venue.name }}</strong>
+                <mat-card class="venue-card">
+                  <div class="card-media">
+                    <img [src]="venueImage(venue.sportType)" [alt]="venue.name" />
+                  </div>
+                  <div class="card-body muted-grid">
+                    <div class="info-row">
+                      <strong>{{ venue.name }}</strong>
+                      <mat-chip-set>
+                        <mat-chip>{{ venue.sportType }}</mat-chip>
+                      </mat-chip-set>
+                    </div>
                     <p>{{ venue.location }}</p>
+                    <p>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hour</p>
+                    <div class="actions">
+                      <button mat-stroked-button type="button" (click)="selectVenue(venue.id)">Select</button>
+                    </div>
                   </div>
-                  <div class="muted-grid">
-                    <strong>{{ venue.sportType }}</strong>
-                    <p>Rs {{ venue.pricePerHour | number:'1.0-0' }}/hr</p>
-                  </div>
-                  <div class="actions">
-                    <button mat-button type="button" (click)="selectVenue(venue.id)">View</button>
-                  </div>
-                </div>
+                </mat-card>
               } @empty {
-                <p>No venues found.</p>
+                <div class="empty-state">
+                  <p>No venues found for the current filters.</p>
+                </div>
               }
             </div>
-          </div>
+          </section>
 
-          <div class="section-card">
-            <div class="headline">
-              <div>
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
                 <h2>Your bookings</h2>
-                <p>Current booking history for your account.</p>
+                <p>Player bookings are kept separate from owner management.</p>
               </div>
             </div>
+
             <div class="table-list">
               @for (booking of bookings(); track booking.id) {
                 <div class="table-row">
                   <div class="muted-grid">
                     <strong>{{ venueNameFor(booking.venueId) }}</strong>
-                    <p>{{ booking.slotTime | date:'medium' }}</p>
+                    <p>{{ booking.slotTime | date: 'medium' }}</p>
                   </div>
                   <div class="muted-grid">
-                    <strong>{{ booking.status }}</strong>
-                    <p>Rs {{ booking.totalPrice | number:'1.0-0' }}</p>
+                    <mat-chip-set>
+                      <mat-chip class="status-chip">{{ booking.status }}</mat-chip>
+                    </mat-chip-set>
+                    <p>Rs {{ booking.totalPrice | number: '1.0-0' }}</p>
                   </div>
                   <div class="actions">
-                    <button mat-button type="button" (click)="cancelBooking(booking.id)"
-                            *ngIf="booking.status === 'BOOKED'">
+                    <button mat-button type="button" (click)="cancelBooking(booking.id)" *ngIf="booking.status === 'BOOKED'">
                       Cancel
                     </button>
                   </div>
                 </div>
               } @empty {
-                <p>No bookings yet.</p>
+                <div class="empty-state">
+                  <p>No bookings yet. Pick a venue and create your first slot.</p>
+                </div>
               }
             </div>
-          </div>
+          </section>
         </div>
 
         <aside class="booking-sidebar">
           <div class="muted-grid">
-            <p>Price from</p>
-            <h2>Rs {{ (selectedVenue() ? selectedVenue()!.pricePerHour : 0) | number:'1.0-0' }} / hour</h2>
+            <span class="inline-label">Quick booking</span>
+            <h2>{{ selectedVenueName('No venue selected') }}</h2>
+            <p>Price: Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hour</p>
           </div>
 
           <form [formGroup]="bookingForm" (ngSubmit)="createBooking()" class="page-grid">
-            <div class="muted-grid">
-              <strong>Select date and time</strong>
-              <input matInput type="datetime-local" formControlName="slotTime"/>
-            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>Select date and time</mat-label>
+              <input matInput type="datetime-local" formControlName="slotTime" />
+            </mat-form-field>
 
             <div class="muted-grid">
               <strong>Duration</strong>
-              <div class="chip-row">
+              <mat-chip-set>
                 @for (hours of durationChoices; track hours) {
-                  <button
-                    type="button"
-                    class="slot-chip"
-                    [class.active]="bookingForm.controls.durationHours.getRawValue() === hours"
+                  <mat-chip-option
+                    [selected]="bookingForm.controls.durationHours.getRawValue() === hours"
                     (click)="bookingForm.patchValue({ durationHours: hours })"
                   >
                     {{ hours }} hr
-                  </button>
+                  </mat-chip-option>
                 }
-              </div>
+              </mat-chip-set>
             </div>
 
             <p class="form-error" *ngIf="message()">{{ message() }}</p>
-            <button mat-flat-button color="primary" type="submit">Book Now</button>
+            <button mat-flat-button color="primary" type="submit">Book selected venue</button>
           </form>
         </aside>
       </section>
@@ -183,18 +205,11 @@ export class VenuesPageComponent {
   protected readonly message = signal('');
   protected readonly selectedVenueId = signal<number | null>(null);
   protected readonly durationChoices = [1, 2, 3];
-  protected readonly amenities = [
-    {title: 'Free Parking', caption: 'Easy venue access'},
-    {title: 'Changing Rooms', caption: 'Clean prep spaces'},
-    {title: 'Filtered Water', caption: 'Hydration support'},
-    {title: 'Equipment Rental', caption: 'Sport gear on site'},
-    {title: 'Climate Control', caption: 'Consistent indoor comfort'},
-    {title: 'Free WiFi', caption: 'High speed network'}
-  ];
-  protected readonly galleryImages = [
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuAHySnx8nLE68QjNAC2hKrRpFcKjvJULMx8C99MoqrXj-XHsVB3nA41Sp0UKz3-ZZcu9rGOiY_DB3XIs5eETJ4y-y5mdTRvnyjM_DBn8GZkz6qCHdG76aB2QrwCd3VJG4brzxdSSJpsVd66DZp383sknUzPQMq_F78g4hA-AM2gJ-lSwQ-IAS0ryKpzj_c9kGXCz2Wa-8RvbpVwoIWeXfsUxQz20L5hz_eJBSd3fc8K3rFDfmQhmfq_rmwqmL9bPqZQQCPeDOEMMVk',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuChGV1ddoPksUt9_bPnD12K_ZIKm7H4V0vW2_99VYe9dsjlDNe0YLw6GpPD7G1zYqtklgXNr6ifrQQGn0KC1ue6PpY185uS2_NjH_rtp-PBBvvHBEgvophYBpu0qMflO3GLWeR7XFlw3fiBKdjqRnjEpPYtggEz_wS5jySvew8fE5__lXRF3E1G7ASucxEyQeenlo0-GJBZ01znPbH7xUM0GtTrxNxotwfmIZV_dxJ3VPxLb06yDwLfs4L5l0_1EU4FWA3oIGVToq8',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuDpGUcU5tW1zncPfGprCCsPLqPTl1e2NIVnA51pvmA7_ycMs56zidyspFyRbJN3FdB1DC_hU-L7uQASajIaoux6GPAgLovJcA_IJ9y9U1aN8kGmp8rqm5x9JeDyQWacPezlZUvqDERCpHl45AIHPxRDjnw89OI2DjerMXtBLe0o--YKJ_SqZU6yjZigJBCFfkikP8rJzBqYzq0K_t_-4XQoxuvkZIDOQmghEnl-1TsMUMlT62OEeUhhmKSyOmiQGJy8gUZqV_usyhc'
+  protected readonly highlights = [
+    { title: 'Search quickly', caption: 'Filter venues by location and sport type.', icon: 'search' },
+    { title: 'Book faster', caption: 'Create bookings from the selected venue card.', icon: 'bolt' },
+    { title: 'Swap images later', caption: 'All cards use placeholder images for now.', icon: 'image' },
+    { title: 'Player-only flow', caption: 'This page is designed for user bookings, not owner management.', icon: 'person' }
   ];
 
   protected readonly filterForm = this.fb.nonNullable.group({
@@ -215,6 +230,8 @@ export class VenuesPageComponent {
 
   constructor() {
     const user = this.store.currentUser();
+    this.selectedVenueId.set(this.venues()[0]?.id ?? null);
+    this.syncSelectedVenue();
     if (user) {
       void this.store.loadBookings(user.id).catch(() => undefined);
     }
@@ -232,7 +249,7 @@ export class VenuesPageComponent {
   }
 
   protected async resetFilters(): Promise<void> {
-    this.filterForm.reset({location: '', sportType: ''});
+    this.filterForm.reset({ location: '', sportType: '' });
     try {
       await this.store.loadVenues();
       this.selectedVenueId.set(this.venues()[0]?.id ?? null);
@@ -280,14 +297,27 @@ export class VenuesPageComponent {
   }
 
   protected selectedVenueImage(): string {
-    const sport = this.selectedVenue()?.sportType?.toLowerCase() ?? '';
-    if (sport.includes('badminton') || sport.includes('tennis')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuBnWspcWn2TI814PhylrSE-qBEJZJFh32Q_KvKB0gAiOqei2N77Hcvy4HP3QG25SGaadMrr2QcM0Men1CnMh_QqavqZH6JiU7jEQIooVieawCgW00bkShuWg7CKyH9FfBwX7wewZzYqQ_fx5gtCeA5W6EDbdY394WnY9FNRmUi6tAbNno4BPQbG6YZrK4hMDgTDz4qvWFAUh8Td27YW1XELjPnwvrtzFMoM_Spp0ZeBZtKizBWC7XR4rYScot9XvCghT5DIBUz_zLA';
-    }
-    if (sport.includes('basketball')) {
-      return 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpGUcU5tW1zncPfGprCCsPLqPTl1e2NIVnA51pvmA7_ycMs56zidyspFyRbJN3FdB1DC_hU-L7uQASajIaoux6GPAgLovJcA_IJ9y9U1aN8kGmp8rqm5x9JeDyQWacPezlZUvqDERCpHl45AIHPxRDjnw89OI2DjerMXtBLe0o--YKJ_SqZU6yjZigJBCFfkikP8rJzBqYzq0K_t_-4XQoxuvkZIDOQmghEnl-1TsMUMlT62OEeUhhmKSyOmiQGJy8gUZqV_usyhc';
-    }
-    return 'https://placehold.co/1200x900/e2f9ed/006d39?text=FairPlay+Venue';
+    return this.selectedVenue() ? this.venueImage(this.selectedVenue()!.sportType) : placeholderImage(1200, 800, 'Select Venue');
+  }
+
+  protected selectedVenueName(fallback = 'Explore venues'): string {
+    return this.selectedVenue()?.name ?? fallback;
+  }
+
+  protected selectedVenueLocation(): string {
+    return this.selectedVenue()?.location ?? 'Use the filters to browse available venues and book a slot.';
+  }
+
+  protected selectedVenueSport(): string {
+    return this.selectedVenue()?.sportType ?? 'Venue';
+  }
+
+  protected selectedVenuePrice(): number {
+    return this.selectedVenue()?.pricePerHour ?? 0;
+  }
+
+  protected venueImage(sportType: string): string {
+    return sportPlaceholder(sportType || 'Venue', 900, 600);
   }
 
   private syncSelectedVenue(): void {
