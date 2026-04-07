@@ -1,0 +1,140 @@
+Product Requirements Document (PRD) 
+Project: FairPlay – Sports Venue & Activity Booking 
+Platform 
+ 
+1. Project Overview 
+FairPlay is a sports activity and venue booking platform that allows users to discover, join, and 
+host sports activities while enabling venue owners to manage their facilities efficiently. 
+Problem Statement: 
+People struggle to find sports venues, players, and organized activities in one place. 
+Solution: 
+A microservices-based backend with an Angular frontend that enables users to book venues, 
+join activities, and connect with players, while venue owners manage their listings and bookings. 
+ 
+2. Objectives 
+● Enable user registration and profile management 
+● Allow users to search and book sports venues 
+● Allow users to join or host sports activities 
+● Enable venue owners to manage venues, bookings, and pricing 
+ 
+3. Users / Roles 
+User: 
+● Register and manage profile 
+● Book sports venues 
+● Join or host sports activities 
+ 
+Sports Venue Owner: 
+● Register and list venues 
+● Manage bookings, slots, and pricing 
+● Track earnings and cancellations 
+ 
+4. Core Features 
+User Service: 
+● User Registration 
+● User Profile Management 
+● Join / Host Sports Activities 
+● Venue Booking 
+● Connect with Players 
+Venue Service: 
+● Venue Registration 
+● Venue Details Management 
+● Booking Management 
+● Slot & Pricing Management 
+● Earnings Tracking 
+● Cancellation Monitoring 
+ 
+5. System Architecture 
+Frontend: 
+● Angular Application 
+Backend: 
+● API Gateway 
+● Eureka Server 
+● User Microservice 
+● Venue Microservice 
+ 
+6. Microservices Breakdown 
+User Service 
+Responsibilities: 
+● Manage user data 
+● Handle activity participation and hosting 
+APIs: 
+● POST /users 
+● GET /users/{id} 
+● PUT /users/{id} 
+● POST /activities/join 
+● POST /activities/host 
+ 
+Venue Service 
+Responsibilities: 
+● Manage venues, bookings, and pricing 
+APIs: 
+● POST /venues 
+● GET /venues 
+● PUT /venues/{id} 
+● POST /bookings 
+● GET /bookings/{userId} 
+● PUT /bookings/{id} 
+ 
+7. Database Design 
+User Table: 
+● id 
+● name 
+● email 
+● Phone 
+● role (USER / OWNER) 
+Venue Table: 
+● id 
+● name 
+● location 
+● sportType 
+● pricePerHour 
+● ownerId  
+Booking Table: 
+● id 
+● userId 
+● venueId 
+● slotTime 
+● status 
+Activity Table: 
+● id 
+● hostUserId 
+● sportType 
+● location 
+● time 
+ActivityParticipants Table  
+● id 
+● activityId 
+● userId 
+ 
+ 
+8. API Communication 
+● Venue Service communicates with User Service using OpenFeign 
+● Validates user before booking or joining activities 
+● Ensures host and participant consistency 
+ 
+9. UI Screens 
+● Registration Page 
+● Login Page 
+● Profile Page 
+● Venue Search Page 
+● Booking Page 
+● Activity Feed Page 
+● Host Activity Page 
+● Venue Owner Dashboard 
+ 
+10. Assumptions & Limitations 
+● No payment integration initially 
+● Basic validation only 
+● No advanced authentication/authorization 
+● Limited scalability in initial version 
+ 
+11. Future Enhancements 
+● Add JWT Authentication 
+● Add Payment Integration 
+● Real-time chat between players 
+● Ratings & Reviews for venues and players 
+● AI-based player matching 
+● Notifications (email/SMS/push) 
+ 
+ 
+ 
