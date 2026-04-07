@@ -42,6 +42,7 @@ export class App {
     if (user.role === 'OWNER') {
       return [
         { label: 'Home', path: '/', exact: true, icon: 'home' },
+        { label: 'Bookings', path: '/bookings', exact: false, icon: 'event' },
         { label: 'Owner Hub', path: '/owner', exact: false, icon: 'dashboard_customize' },
         { label: 'Profile', path: '/profile', exact: false, icon: 'manage_accounts' }
       ];
@@ -49,6 +50,7 @@ export class App {
 
     return [
       { label: 'Home', path: '/', exact: true, icon: 'home' },
+      { label: 'Bookings', path: '/bookings', exact: false, icon: 'event' },
       { label: 'Venues', path: '/venues', exact: false, icon: 'stadium' },
       { label: 'Activities', path: '/activities', exact: false, icon: 'groups' },
       { label: 'Profile', path: '/profile', exact: false, icon: 'person' }

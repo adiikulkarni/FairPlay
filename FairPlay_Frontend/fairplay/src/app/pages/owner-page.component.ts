@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
@@ -20,8 +21,12 @@ import { FairplayStore } from '../services/fairplay-store.service';
     MatChipsModule,
     MatFormFieldModule,
     MatIconModule,
-    MatInputModule
+    MatInputModule,
+    MatProgressSpinnerModule,
+    DatePipe,
+    DecimalPipe
   ],
+  providers: [DatePipe],
   template: `
     <section class="page-grid">
       <section class="hero-copy-grid">
@@ -30,7 +35,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <div>
               <span class="inline-label">Owner dashboard</span>
               <h1>Manage venues without mixing player flows.</h1>
-              <p>Owner actions stay in one dedicated workspace for metrics, publishing, and revenue visibility.</p>
+<!--              <p>Owner actions stay in one dedicated workspace for metrics, publishing, and revenue visibility.</p>-->
             </div>
           </div>
 
@@ -43,13 +48,13 @@ import { FairplayStore } from '../services/fairplay-store.service';
         </div>
 
         <div class="media-banner">
-          <img [src]="heroImage" alt="Owner dashboard placeholder" />
+          <img [src]="heroImage" alt="Owner dashboard hero" />
           <div class="media-banner-copy muted-grid">
             <mat-chip-set>
               <mat-chip>Owner role</mat-chip>
             </mat-chip-set>
-            <strong>Placeholder owner imagery</strong>
-            <p>Replace this image later with venue or operations photography.</p>
+            <strong>Owner workspace</strong>
+            <p>Metrics, bookings, and venue publishing stay within this dashboard.</p>
           </div>
         </div>
       </section>
@@ -129,6 +134,51 @@ import { FairplayStore } from '../services/fairplay-store.service';
         </div>
 
         <div class="page-grid">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
+                <h2>Venue bookings</h2>
+                <p>Owner view of bookings tied to your venues with player details.</p>
+              </div>
+              <mat-chip-set>
+                <mat-chip>{{ ownerBookings().length }} total</mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <div class="centered" *ngIf="loadingOwnerBookings()">
+              <mat-spinner diameter="36"></mat-spinner>
+            </div>
+
+            <div class="table-list" *ngIf="!loadingOwnerBookings()">
+              @for (booking of ownerBookings(); track booking.id) {
+                <div class="table-row">
+                  <div class="muted-grid">
+                    <strong>{{ booking.venueName ?? venueNameFor(booking.venueId) }}</strong>
+                    <p>{{ booking.slotTime | date: 'medium' }} → {{ bookingEndTime(booking) }}</p>
+                    <p>Duration: {{ booking.durationHours }} hr</p>
+                  </div>
+                  <div class="muted-grid">
+                    <mat-chip-set>
+                      <mat-chip class="status-chip" [ngClass]="{ cancelled: booking.status === 'CANCELLED' }">
+                        {{ booking.status }}
+                      </mat-chip>
+                    </mat-chip-set>
+                    <p>Rs {{ booking.totalPrice | number: '1.0-0' }}</p>
+                  </div>
+                  <div class="muted-grid">
+                    <strong>{{ booking.bookedBy?.name ?? 'User #' + booking.userId }}</strong>
+                    <p>{{ booking.bookedBy?.email ?? 'Email not provided' }}</p>
+                    <p>{{ booking.bookedBy?.phone ?? 'Phone not provided' }}</p>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state">
+                  <p>No bookings found for your venues.</p>
+                </div>
+              }
+            </div>
+          </section>
+
           <section class="cta-grid">
             @for (item of ownerNotes; track item.title) {
               <mat-card class="overview-card muted-grid">
@@ -140,16 +190,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
               </mat-card>
             }
           </section>
-
-          <mat-card class="venue-card">
-            <div class="card-media">
-              <img [src]="cardImage" alt="Owner venue placeholder" />
-            </div>
-            <div class="card-body muted-grid">
-              <strong>Owner media card</strong>
-              <p>Another dummy image slot that you can replace with real venue photography later.</p>
-            </div>
-          </mat-card>
         </div>
       </section>
     </section>
@@ -158,15 +198,15 @@ import { FairplayStore } from '../services/fairplay-store.service';
 export class OwnerPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly store = inject(FairplayStore);
+  private readonly datePipe = inject(DatePipe);
 
   protected readonly message = signal('');
   protected readonly heroImage = sportPlaceholder('Owner Workspace', 1200, 800);
-  protected readonly cardImage = sportPlaceholder('Venue Operations', 900, 600);
   protected readonly ownerNotes = [
     { title: 'Revenue visibility', caption: 'Owner earnings remain visible only in the owner workspace.', icon: 'payments' },
     { title: 'Role separation', caption: 'Player booking screens and owner management are visually distinct.', icon: 'account_tree' },
-    { title: 'Placeholder ready', caption: 'All owner media slots use dummy imagery for now.', icon: 'image' },
-    { title: 'Fast publishing', caption: 'The create venue form is cleaner and more consistent.', icon: 'publish' }
+    { title: 'Player context', caption: 'Booking rows surface player contact details when available.', icon: 'perm_contact_calendar' },
+    { title: 'Fast publishing', caption: 'The create venue form is cleaner and consistent.', icon: 'publish' }
   ];
 
   protected readonly stats = computed(() => {
@@ -212,11 +252,14 @@ export class OwnerPageComponent {
 
   constructor() {
     void this.store.loadOwnerDashboardIfNeeded().catch(() => undefined);
+    void this.store.loadOwnerBookings().catch(() => undefined);
+    void this.store.loadVenues().catch(() => undefined);
   }
 
   protected async refresh(): Promise<void> {
     try {
       await this.store.loadOwnerDashboardIfNeeded();
+      await this.store.loadOwnerBookings();
       this.message.set('');
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Refresh failed.');
@@ -241,4 +284,19 @@ export class OwnerPageComponent {
       this.message.set(error instanceof Error ? error.message : 'Create failed.');
     }
   }
+
+  protected ownerBookings = this.store.ownerBookings;
+  protected loadingOwnerBookings = this.store.loadingOwnerBookings;
+
+  protected venueNameFor(venueId: number): string {
+    return this.store.venues().find((v) => v.id === venueId)?.name ?? `Venue #${venueId}`;
+  }
+
+  protected bookingEndTime = (booking: { slotTime: string; durationHours: number }): string => {
+    const start = new Date(booking.slotTime);
+    const end = new Date(start);
+    end.setHours(end.getHours() + booking.durationHours);
+    const formatted = this.datePipe.transform(end, 'mediumTime');
+    return formatted ?? '';
+  };
 }

@@ -1,6 +1,13 @@
 export type Role = 'USER' | 'OWNER';
 export type BookingStatus = 'BOOKED' | 'CANCELLED';
 
+export interface ActivityParticipant {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 export interface UserResponse {
   id: number;
   name: string;
@@ -25,6 +32,8 @@ export interface Activity {
   location: string;
   time: string;
   participantCount: number;
+  participantIds: number[];
+  participants?: ActivityParticipant[];
 }
 
 export interface Booking {
@@ -35,6 +44,13 @@ export interface Booking {
   status: BookingStatus;
   durationHours: number;
   totalPrice: number;
+  bookedBy?: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+  };
+  venueName?: string;
 }
 
 export interface OwnerDashboardResponse {

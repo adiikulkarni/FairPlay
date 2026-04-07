@@ -128,6 +128,17 @@ public class VenueManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Venue not found for id " + venueId));
     }
 
+    /**
+     * Returns all venues for a validated owner.
+     *
+     * @param ownerId owner id
+     * @return venues for owner
+     */
+    public List<Venue> getVenuesForOwner(Long ownerId) {
+        userValidationService.validateOwner(ownerId);
+        return venueRepository.findByOwnerId(ownerId);
+    }
+
     private String normalize(String value) {
         if (value == null || value.isBlank()) {
             return null;

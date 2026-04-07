@@ -4,6 +4,7 @@ import com.gl.fairplay.userservice.domain.Activity;
 import com.gl.fairplay.userservice.domain.User;
 import com.gl.fairplay.userservice.web.dto.ActivityResponse;
 import com.gl.fairplay.userservice.web.dto.UserResponse;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,14 +30,15 @@ public class UserMapper {
      * @param participantCount participant count
      * @return response payload
      */
-    public ActivityResponse toActivityResponse(Activity activity, long participantCount) {
+    public ActivityResponse toActivityResponse(Activity activity, long participantCount, List<Long> participantIds) {
         return new ActivityResponse(
                 activity.getId(),
                 activity.getHostUserId(),
                 activity.getSportType(),
                 activity.getLocation(),
                 activity.getTime(),
-                participantCount
+                participantCount,
+                participantIds
         );
     }
 }

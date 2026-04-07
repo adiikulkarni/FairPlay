@@ -36,9 +36,11 @@ import { FairplayStore } from '../services/fairplay-store.service';
 
       <div class="profile-grid">
         <mat-card class="profile-summary muted-grid" *ngIf="currentUser()">
-          <img class="avatar-image" [src]="avatarImage()" alt="Profile placeholder" />
-          <div class="profile-avatar">{{ initials() }}</div>
-          <strong>{{ currentUser()!.name }}</strong>
+          <img class="avatar-image" [src]="avatarImage()" alt="Profile avatar" />
+          <div class="name-row">
+            <span class="initial-badge">{{ initials() }}</span>
+            <strong>{{ currentUser()!.name }}</strong>
+          </div>
           <p>{{ currentUser()!.email }}</p>
           <mat-chip-set>
             <mat-chip>{{ currentUser()!.role === 'OWNER' ? 'Owner' : 'Player' }}</mat-chip>

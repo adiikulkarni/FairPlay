@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +64,28 @@ public class BookingManagementService {
         return bookingRepository.findByUserIdOrderBySlotTimeDesc(userId).stream()
                 .map(mapper::toBookingResponse)
                 .toList();
+    }
+
+    /**
+     * Returns bookings for all venues owned by the owner.
+     *
+     * @param ownerId owner id
+     * @return booking list
+     */
+    public List<BookingResponse> getBookingsForOwner(Long ownerId) {
+        var venues = venueManagementService.getVenuesForOwner(ownerId);
+        if (venues.isEmpty()) {
+            return List.of();
+        }
+
+        var venueIds = venues.stream()
+                .map(Venue::getId)
+                .toList();
+
+        return bookingRepository.findByVenueIdIn(venueIds).stream()
+                .sorted((a, b) -> b.getSlotTime().compareTo(a.getSlotTime()))
+                .map(mapper::toBookingResponse)
+                .collect(Collectors.toList());
     }
 
     /**

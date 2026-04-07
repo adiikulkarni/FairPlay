@@ -26,7 +26,10 @@ export class FairplayStore {
   readonly loadingVenues = signal(false);
   readonly loadingActivities = signal(false);
   readonly loadingBookings = signal(false);
+  readonly ownerBookings = signal<Booking[]>([]);
+  readonly loadingOwnerBookings = signal(false);
   readonly bootstrapError = signal('');
+  private readonly userCache = new Map<number, UserResponse>();
 
   constructor() {
     void this.initialize();
@@ -79,7 +82,8 @@ export class FairplayStore {
     this.loadingActivities.set(true);
     try {
       const activities = await this.request(() => this.http.get<Activity[]>(this.url('/activities')));
-      this.activities.set(activities);
+      const enriched = await this.enrichActivitiesWithUsers(activities);
+      this.activities.set(enriched);
     } finally {
       this.loadingActivities.set(false);
     }
@@ -95,6 +99,23 @@ export class FairplayStore {
     }
   }
 
+  async loadOwnerBookings(): Promise<void> {
+    const user = this.currentUser();
+    if (!user || user.role !== 'OWNER') {
+      this.ownerBookings.set([]);
+      return;
+    }
+    this.loadingOwnerBookings.set(true);
+    try {
+      const bookings = await this.request(() => this.http.get<Booking[]>(this.url(`/owners/${user.id}/bookings`)));
+      const enriched = await this.enrichBookingsWithUsers(bookings);
+      const withVenueNames = this.attachVenueNames(enriched);
+      this.ownerBookings.set(withVenueNames);
+    } finally {
+      this.loadingOwnerBookings.set(false);
+    }
+  }
+
   async createBooking(payload: { venueId: number; slotTime: string; durationHours: number }): Promise<void> {
     const user = this.requireUser();
     await this.request(() =>
@@ -107,6 +128,7 @@ export class FairplayStore {
     );
     await this.loadBookings(user.id);
     await this.loadOwnerDashboardIfNeeded();
+    await this.loadOwnerBookings();
   }
 
   async cancelBooking(bookingId: number): Promise<void> {
@@ -114,6 +136,7 @@ export class FairplayStore {
     await this.request(() => this.http.put<Booking>(this.url(`/bookings/${bookingId}`), { status: 'CANCELLED' }));
     await this.loadBookings(user.id);
     await this.loadOwnerDashboardIfNeeded();
+    await this.loadOwnerBookings();
   }
 
   async hostActivity(payload: { sportType: string; location: string; time: string }): Promise<void> {
@@ -262,6 +285,61 @@ export class FairplayStore {
 
   private url(path: string): string {
     return `${this.apiBase}${path}`;
+  }
+
+  private async fetchUserById(userId: number): Promise<UserResponse> {
+    if (this.userCache.has(userId)) {
+      return this.userCache.get(userId)!;
+    }
+    const user = await this.request(() => this.http.get<UserResponse>(this.url(`/users/${userId}`)));
+    this.userCache.set(userId, user);
+    return user;
+  }
+
+  private async enrichBookingsWithUsers(bookings: Booking[]): Promise<Booking[]> {
+    return Promise.all(
+      bookings.map(async (booking) => {
+        try {
+          const user = await this.fetchUserById(booking.userId);
+          return { ...booking, bookedBy: user };
+        } catch {
+          return booking;
+        }
+      })
+    );
+  }
+
+  private attachVenueNames(bookings: Booking[]): Booking[] {
+    return bookings.map((booking) => ({
+      ...booking,
+      venueName: this.venues().find((v) => v.id === booking.venueId)?.name ?? booking.venueName
+    }));
+  }
+
+  private async enrichActivitiesWithUsers(activities: Activity[]): Promise<Activity[]> {
+    return Promise.all(
+      activities.map(async (activity) => {
+        const participantIds: number[] = activity.participantIds ?? [];
+
+        const uniqueIds = new Set<number>([activity.hostUserId, ...participantIds]);
+        const participants: Activity['participants'] = [];
+
+        for (const id of uniqueIds) {
+          try {
+            const user = await this.fetchUserById(id);
+            participants.push({ id: user.id, name: user.name, email: user.email, phone: user.phone });
+          } catch {
+            // ignore failures; keep existing data
+          }
+        }
+
+        if (participants.length === 0) {
+          return activity;
+        }
+
+        return { ...activity, participants };
+      })
+    );
   }
 
   private resolveApiBase(): string {

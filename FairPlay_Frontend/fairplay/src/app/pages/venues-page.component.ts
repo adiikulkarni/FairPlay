@@ -1,6 +1,6 @@
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -8,7 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { placeholderImage, sportPlaceholder } from '../placeholder-images';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTimepickerModule } from '@angular/material/timepicker';
+import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
@@ -23,6 +25,8 @@ import { FairplayStore } from '../services/fairplay-store.service';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatTimepickerModule,
     DecimalPipe,
     DatePipe
   ],
@@ -33,8 +37,8 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <div class="headline">
             <div>
               <span class="inline-label">Player booking zone</span>
-              <h1>{{ selectedVenueName() }}</h1>
-              <p>{{ selectedVenueLocation() }}</p>
+              <h1>Find and book venues</h1>
+              <p>Search by location and sport, then pick a venue to create a slot.</p>
             </div>
           </div>
 
@@ -53,28 +57,21 @@ import { FairplayStore } from '../services/fairplay-store.service';
             </div>
           </form>
 
-          <div class="cta-grid">
-            @for (item of highlights; track item.title) {
-              <mat-card class="cta-card muted-grid">
-                <div class="info-row">
-                  <strong>{{ item.title }}</strong>
-                  <mat-icon>{{ item.icon }}</mat-icon>
-                </div>
-                <p>{{ item.caption }}</p>
-              </mat-card>
-            }
-          </div>
         </div>
 
         <div class="media-banner">
           <img [src]="selectedVenueImage()" [alt]="selectedVenueName()" />
           <div class="media-banner-copy muted-grid">
             <mat-chip-set>
-              <mat-chip>{{ selectedVenueSport() }}</mat-chip>
-              <mat-chip>Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hr</mat-chip>
+              <mat-chip>{{ selectedVenueSport() || 'Venue' }}</mat-chip>
+              <mat-chip *ngIf="selectedVenue()">Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hr</mat-chip>
             </mat-chip-set>
-            <strong>{{ selectedVenueName() }}</strong>
-            <p>{{ selectedVenue() ? 'Placeholder venue image ready to replace later.' : 'Live venue details will appear here once loaded.' }}</p>
+            <strong>{{ selectedVenueName('Select a venue to preview') }}</strong>
+            <p>
+              {{ selectedVenue()
+                ? 'Selected venue details are loaded from the backend.'
+                : 'Use filters to load venues and pick one to book.' }}
+            </p>
           </div>
         </div>
       </section>
@@ -85,7 +82,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <div class="section-header">
               <div class="muted-grid">
                 <h2>Available venues</h2>
-                <p>Each venue card now uses a dummy image until you replace it with real photography.</p>
+                <p>Cards show live venue names, pricing, and sport types from the service.</p>
               </div>
               <mat-chip-set>
                 <mat-chip>{{ venues().length }} venues</mat-chip>
@@ -124,7 +121,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
             </div>
           </section>
 
-          <section class="section-card">
+          <section class="section-card" id="bookings">
             <div class="section-header">
               <div class="muted-grid">
                 <h2>Your bookings</h2>
@@ -169,8 +166,17 @@ import { FairplayStore } from '../services/fairplay-store.service';
 
           <form [formGroup]="bookingForm" (ngSubmit)="createBooking()" class="page-grid">
             <mat-form-field appearance="outline">
-              <mat-label>Select date and time</mat-label>
-              <input matInput type="datetime-local" formControlName="slotTime" />
+              <mat-label>Select date</mat-label>
+              <input matInput [matDatepicker]="bookingDatePicker" formControlName="slotDate" />
+              <mat-datepicker-toggle matIconSuffix [for]="bookingDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #bookingDatePicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Select time</mat-label>
+              <input matInput [matTimepicker]="bookingTimePicker" formControlName="slotTime" />
+              <mat-timepicker-toggle matIconSuffix [for]="bookingTimePicker"></mat-timepicker-toggle>
+              <mat-timepicker #bookingTimePicker></mat-timepicker>
             </mat-form-field>
 
             <div class="muted-grid">
@@ -205,22 +211,17 @@ export class VenuesPageComponent {
   protected readonly message = signal('');
   protected readonly selectedVenueId = signal<number | null>(null);
   protected readonly durationChoices = [1, 2, 3];
-  protected readonly highlights = [
-    { title: 'Search quickly', caption: 'Filter venues by location and sport type.', icon: 'search' },
-    { title: 'Book faster', caption: 'Create bookings from the selected venue card.', icon: 'bolt' },
-    { title: 'Swap images later', caption: 'All cards use placeholder images for now.', icon: 'image' },
-    { title: 'Player-only flow', caption: 'This page is designed for user bookings, not owner management.', icon: 'person' }
-  ];
 
   protected readonly filterForm = this.fb.nonNullable.group({
     location: [''],
     sportType: ['']
   });
 
-  protected readonly bookingForm = this.fb.nonNullable.group({
-    venueId: [0, [Validators.required, Validators.min(1)]],
-    slotTime: ['', Validators.required],
-    durationHours: [1, [Validators.required, Validators.min(1), Validators.max(12)]]
+  protected readonly bookingForm = this.fb.group({
+    venueId: this.fb.nonNullable.control(0, [Validators.required, Validators.min(1)]),
+    slotDate: new FormControl<Date | null>(null, Validators.required),
+    slotTime: new FormControl<Date | null>(null, Validators.required),
+    durationHours: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1), Validators.max(12)])
   });
 
   protected readonly selectedVenue = computed(() => {
@@ -272,10 +273,12 @@ export class VenuesPageComponent {
       return;
     }
     try {
+      const { slotDate, slotTime, venueId, durationHours } = this.bookingForm.getRawValue();
+      const slotDateTime = this.combineDateAndTime(slotDate, slotTime);
       await this.store.createBooking({
-        venueId: this.bookingForm.controls.venueId.getRawValue(),
-        slotTime: this.bookingForm.controls.slotTime.getRawValue(),
-        durationHours: this.bookingForm.controls.durationHours.getRawValue()
+        venueId: venueId ?? 0,
+        slotTime: slotDateTime,
+        durationHours: durationHours ?? 1
       });
       this.message.set('Booking created.');
     } catch (error) {
@@ -297,7 +300,7 @@ export class VenuesPageComponent {
   }
 
   protected selectedVenueImage(): string {
-    return this.selectedVenue() ? this.venueImage(this.selectedVenue()!.sportType) : placeholderImage(1200, 800, 'Select Venue');
+    return '/venue-placeholder.jpeg';
   }
 
   protected selectedVenueName(fallback = 'Explore venues'): string {
@@ -309,15 +312,15 @@ export class VenuesPageComponent {
   }
 
   protected selectedVenueSport(): string {
-    return this.selectedVenue()?.sportType ?? 'Venue';
+    return this.selectedVenue()?.sportType ?? '';
   }
 
   protected selectedVenuePrice(): number {
     return this.selectedVenue()?.pricePerHour ?? 0;
   }
 
-  protected venueImage(sportType: string): string {
-    return sportPlaceholder(sportType || 'Venue', 900, 600);
+  protected venueImage(_: string): string {
+    return '/venue-placeholder.jpeg';
   }
 
   private syncSelectedVenue(): void {
@@ -325,5 +328,17 @@ export class VenuesPageComponent {
     if (venueId > 0) {
       this.bookingForm.patchValue({ venueId });
     }
+  }
+
+  private combineDateAndTime(date: Date | null, time: Date | null): string {
+    if (!date || !time) {
+      throw new Error('Select both a booking date and time.');
+    }
+    const combined = new Date(date);
+    combined.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    const pad = (value: number): string => value.toString().padStart(2, '0');
+    return `${combined.getFullYear()}-${pad(combined.getMonth() + 1)}-${pad(combined.getDate())}T${pad(
+      combined.getHours()
+    )}:${pad(combined.getMinutes())}:00`;
   }
 }

@@ -13,6 +13,9 @@
         <module name="venue-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="fairplay" target="1.5" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

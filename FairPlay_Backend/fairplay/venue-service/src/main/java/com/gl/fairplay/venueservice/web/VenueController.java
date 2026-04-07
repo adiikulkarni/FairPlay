@@ -1,6 +1,8 @@
 package com.gl.fairplay.venueservice.web;
 
+import com.gl.fairplay.venueservice.service.BookingManagementService;
 import com.gl.fairplay.venueservice.service.VenueManagementService;
+import com.gl.fairplay.venueservice.web.dto.BookingResponse;
 import com.gl.fairplay.venueservice.web.dto.OwnerDashboardResponse;
 import com.gl.fairplay.venueservice.web.dto.VenueCreateRequest;
 import com.gl.fairplay.venueservice.web.dto.VenueResponse;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class VenueController {
 
     private final VenueManagementService venueManagementService;
+    private final BookingManagementService bookingManagementService;
 
     /**
      * Creates a venue.
@@ -76,5 +79,16 @@ public class VenueController {
     @GetMapping("/owners/{ownerId}/dashboard")
     public OwnerDashboardResponse getOwnerDashboard(@PathVariable Long ownerId) {
         return venueManagementService.getOwnerDashboard(ownerId);
+    }
+
+    /**
+     * Returns bookings across all venues owned by the owner.
+     *
+     * @param ownerId owner id
+     * @return booking list
+     */
+    @GetMapping("/owners/{ownerId}/bookings")
+    public List<BookingResponse> getOwnerBookings(@PathVariable Long ownerId) {
+        return bookingManagementService.getBookingsForOwner(ownerId);
     }
 }

@@ -49,7 +49,8 @@ public class ActivityManagementService {
                 .userId(request.hostUserId())
                 .build());
 
-        return mapper.toActivityResponse(saved, 1L);
+        List<Long> participantIds = List.of(request.hostUserId());
+        return mapper.toActivityResponse(saved, participantIds.size(), participantIds);
     }
 
     /**
@@ -73,7 +74,8 @@ public class ActivityManagementService {
                 .userId(request.userId())
                 .build());
 
-        return mapper.toActivityResponse(activity, participantRepository.countByActivityId(activity.getId()));
+        List<Long> participantIds = participantIds(activity.getId());
+        return mapper.toActivityResponse(activity, participantIds.size(), participantIds);
     }
 
     /**
@@ -83,9 +85,16 @@ public class ActivityManagementService {
      */
     public List<ActivityResponse> getActivities() {
         return activityRepository.findAllByOrderByTimeAsc().stream()
-                .map(activity -> mapper.toActivityResponse(
-                        activity,
-                        participantRepository.countByActivityId(activity.getId())))
+                .map(activity -> {
+                    List<Long> participantIds = participantIds(activity.getId());
+                    return mapper.toActivityResponse(activity, participantIds.size(), participantIds);
+                })
+                .toList();
+    }
+
+    private List<Long> participantIds(Long activityId) {
+        return participantRepository.findByActivityId(activityId).stream()
+                .map(ActivityParticipant::getUserId)
                 .toList();
     }
 }

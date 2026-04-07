@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { placeholderImage, sportPlaceholder } from '../placeholder-images';
+import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
@@ -103,7 +103,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
         <div class="section-header">
           <div class="muted-grid">
             <h2>Featured venues</h2>
-            <p>Dummy imagery is in place for every card so you can swap real assets later.</p>
+            <p>Venue cards pull live pricing and sport labels from the backend.</p>
           </div>
         </div>
 
@@ -278,19 +278,19 @@ export class DashboardPageComponent {
       return 'Manage your venues with a cleaner owner dashboard.';
     }
     if (this.currentUser()) {
-      return 'Book faster with a cleaner player experience.';
+      return 'Play More. Wait Less.';
     }
-    return 'Discover sports spaces, activities, and separate role journeys.';
+    return 'Discover sports spaces, activities, and separate role journeys backed by live services.';
   });
 
   protected readonly heroText = computed(() => {
     if (this.currentUser()?.role === 'OWNER') {
-      return 'Owner actions now stay focused on venue publishing, revenue, and booking oversight instead of sharing UI with player tools.';
+      return '';
     }
     if (this.currentUser()) {
-      return 'Players get a dedicated flow for venue discovery, bookings, and community activities without owner-only noise.';
+      return '';
     }
-    return 'Use placeholder images now, then replace them later with venue and activity photos once your content is ready.';
+    return 'Browse venues and activities coming from the live services. Host or book to populate your account.';
   });
 
   protected readonly roleNote = computed(() => {
@@ -309,15 +309,13 @@ export class DashboardPageComponent {
 
   protected readonly heroHighlightText = computed(() =>
     this.currentUser()?.role === 'OWNER'
-      ? 'Venue operations, placeholder imagery, and revenue cards are grouped into one owner space.'
+      ? 'Venue operations and revenue cards stay grouped in the owner space.'
       : 'Venue discovery, community games, and profile management use a cleaner Material layout.',
   );
 
-  protected readonly heroImage = computed(() =>
-    this.currentUser()?.role === 'OWNER' ? '/home.png' : '/home.png',
-  );
+  protected readonly heroImage = computed(() => '/sports-tools.jpg');
 
-  protected venueImage(sportType: string): string {
-    return sportPlaceholder(sportType || 'Venue', 900, 600);
+  protected venueImage(_: string): string {
+    return '/venue-placeholder.jpeg';
   }
 }
