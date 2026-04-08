@@ -37,7 +37,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <div class="headline">
             <div>
               <span class="inline-label">Player booking zone</span>
-              <h1>Find and book venues</h1>
+              <h1 class= "venueH1">Find and book venues</h1>
               <p>Search by location and sport, then pick a venue to create a slot.</p>
             </div>
           </div>

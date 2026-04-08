@@ -48,11 +48,11 @@ import { FairplayStore } from '../services/fairplay-store.service';
         <div class="media-banner">
           <img [src]="heroImage()" alt="FairPlay hero banner" />
           <div class="media-banner-copy muted-grid">
-            <mat-chip-set>
+            <mat-chip-set class= "a">
               <mat-chip>{{ currentUser()?.role ?? 'Guest' }}</mat-chip>
             </mat-chip-set>
-            <strong>{{ heroHighlightTitle() }}</strong>
-            <p>{{ heroHighlightText() }}</p>
+            <strong class= "a">{{ heroHighlightTitle() }}</strong>
+            <p class= "b">{{ heroHighlightText() }}</p>
           </div>
         </div>
       </section>
@@ -68,34 +68,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <p>{{ item.caption }}</p>
           </mat-card>
         }
-      </section>
-
-      <section class="role-panels">
-        <mat-card class="role-card muted-grid">
-          <span class="inline-label">Player space</span>
-          <h2>Bookings and activities stay focused for users.</h2>
-          <p>
-            Venue discovery, joining games, and personal bookings now live in a distinct player
-            flow.
-          </p>
-          <div class="actions">
-            <a mat-button routerLink="/venues">Browse venues</a>
-            <a mat-button routerLink="/activities">Community games</a>
-          </div>
-        </mat-card>
-
-        <mat-card class="role-card muted-grid">
-          <span class="inline-label">Owner space</span>
-          <h2>Owner tools stay separate from player actions.</h2>
-          <p>
-            Venue publishing, revenue metrics, and dashboard actions remain contained in the owner
-            workspace.
-          </p>
-          <div class="actions">
-            <a mat-button routerLink="/owner">Owner dashboard</a>
-            <a mat-button routerLink="/profile">Account settings</a>
-          </div>
-        </mat-card>
       </section>
 
       <section class="section-card">
