@@ -9,7 +9,8 @@ import {
   UserRegistrationRequest,
   UserResponse,
   UserUpdateRequest,
-  Venue
+  Venue,
+  AuthResponse
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -30,34 +31,43 @@ export class FairplayStore {
   readonly loadingOwnerBookings = signal(false);
   readonly bootstrapError = signal('');
   private readonly userCache = new Map<number, UserResponse>();
+  private readonly tokenKey = 'fairplay.jwt';
 
   constructor() {
     void this.initialize();
 
+    const token = localStorage.getItem(this.tokenKey);
     const user = this.currentUser();
+
+    if (!token) {
+      this.currentUser.set(null);
+      localStorage.removeItem(this.sessionKey);
+      return;
+    }
+
     if (user) {
-      void this.refreshCurrentUser(user.id).catch(() => undefined);
+      void this.refreshCurrentUser().catch(() => this.logout());
       void this.loadBookings(user.id).catch(() => undefined);
       void this.loadOwnerDashboardIfNeeded().catch(() => undefined);
     }
   }
 
   async register(request: UserRegistrationRequest): Promise<UserResponse> {
-    const user = await this.request(() => this.http.post<UserResponse>(this.url('/users'), request));
-    await this.establishSession(user);
-    return this.currentUser()!;
+    await this.request(() => this.http.post<UserResponse>(this.url('/users'), request));
+    return this.login({ email: request.email, password: request.password });
   }
 
   async login(request: LoginRequest): Promise<UserResponse> {
-    const user = await this.request(() => this.http.post<UserResponse>(this.url('/users/login'), request));
-    await this.establishSession(user);
-    return this.currentUser()!;
+    const auth = await this.request(() => this.http.post<AuthResponse>(this.url('/users/login'), request));
+    localStorage.setItem(this.tokenKey, auth.token);
+    await this.establishSession();
+    return this.requireUser();
   }
 
   async updateProfile(userId: number, request: UserUpdateRequest): Promise<UserResponse> {
-    const user = await this.request(() => this.http.put<UserResponse>(this.url(`/users/${userId}`), request));
-    await this.establishSession(user);
-    return this.currentUser()!;
+    await this.request(() => this.http.put<UserResponse>(this.url(`/users/${userId}`), request));
+    await this.establishSession();
+    return this.requireUser();
   }
 
   async loadVenues(filters?: { location?: string; sportType?: string }): Promise<void> {
@@ -186,27 +196,20 @@ export class FairplayStore {
     this.bookings.set([]);
     this.ownerDashboard.set(null);
     localStorage.removeItem(this.sessionKey);
+    localStorage.removeItem(this.tokenKey);
   }
 
-  private async establishSession(user: UserResponse): Promise<void> {
-    await this.refreshCurrentUser(user.id, user);
-    await this.loadBookings(user.id);
-    await this.loadOwnerDashboardIfNeeded();
+  private async establishSession(): Promise<void> {
+   await this.refreshCurrentUser();
+   const currentUser = this.requireUser();
+   await this.loadBookings(currentUser.id);
+   await this.loadOwnerDashboardIfNeeded();
   }
 
-  private async refreshCurrentUser(userId: number, fallbackUser?: UserResponse): Promise<void> {
-    try {
-      const user = await this.request(() => this.http.get<UserResponse>(this.url(`/users/${userId}`)));
-      this.currentUser.set(user);
-      localStorage.setItem(this.sessionKey, JSON.stringify(user));
-    } catch (error) {
-      if (fallbackUser) {
-        this.currentUser.set(fallbackUser);
-        localStorage.setItem(this.sessionKey, JSON.stringify(fallbackUser));
-        return;
-      }
-      throw error;
-    }
+  private async refreshCurrentUser(): Promise<void> {
+    const user = await this.request(() => this.http.get<UserResponse>(this.url('/users/me')));
+    this.currentUser.set(user);
+    localStorage.setItem(this.sessionKey, JSON.stringify(user));
   }
 
   private requireUser(): UserResponse {
@@ -266,6 +269,12 @@ export class FairplayStore {
     }
 
     if (error instanceof HttpErrorResponse) {
+      if (error.status === 401) {
+        return 'Session expired or login required.';
+      }
+      if (error.status === 403) {
+        return 'You are not allowed to perform this action.';
+      }
       if (typeof error.error === 'string' && error.error.trim()) {
         return error.error;
       }
