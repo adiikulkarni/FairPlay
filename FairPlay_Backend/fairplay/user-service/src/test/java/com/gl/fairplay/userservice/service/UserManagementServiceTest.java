@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * Unit tests for user management.
@@ -32,7 +33,11 @@ class UserManagementServiceTest {
 
     @BeforeEach
     void setUp() {
-        userManagementService = new UserManagementService(userRepository, new UserMapper());
+        userManagementService = new UserManagementService(
+                userRepository,
+                new UserMapper(),
+                new BCryptPasswordEncoder()
+        );
     }
 
     @Test
@@ -69,8 +74,14 @@ class UserManagementServiceTest {
 
     @Test
     void loginRejectsInvalidPassword() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
         when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(
-                User.builder().id(1L).email("user@example.com").password("correct").build()));
+                User.builder()
+                        .id(1L)
+                        .email("user@example.com")
+                        .password(encoder.encode("correct"))
+                        .build()));
 
         assertThatThrownBy(() -> userManagementService.login(new LoginRequest("user@example.com", "wrong")))
                 .isInstanceOf(BusinessValidationException.class);

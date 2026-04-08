@@ -23,7 +23,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
   template: `
     <section class="page-grid">
       <section class="hero-copy-grid">
-        <div class="hero-panel page-grid">
+        <div class="hero-panel page-grid dashboard-hero-panel">
           <div class="headline">
             <div>
               <span class="inline-label">{{
@@ -43,17 +43,16 @@ import { FairplayStore } from '../services/fairplay-store.service';
             }}</a>
           </div>
 
-          <div class="surface-note">{{ roleNote() }}</div>
         </div>
 
         <div class="media-banner">
           <img [src]="heroImage()" alt="FairPlay hero banner" />
           <div class="media-banner-copy muted-grid">
-            <mat-chip-set>
+            <mat-chip-set class= "a">
               <mat-chip>{{ currentUser()?.role ?? 'Guest' }}</mat-chip>
             </mat-chip-set>
-            <strong>{{ heroHighlightTitle() }}</strong>
-            <p>{{ heroHighlightText() }}</p>
+            <strong class= "a">{{ heroHighlightTitle() }}</strong>
+            <p class= "b">{{ heroHighlightText() }}</p>
           </div>
         </div>
       </section>
@@ -69,34 +68,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <p>{{ item.caption }}</p>
           </mat-card>
         }
-      </section>
-
-      <section class="role-panels">
-        <mat-card class="role-card muted-grid">
-          <span class="inline-label">Player space</span>
-          <h2>Bookings and activities stay focused for users.</h2>
-          <p>
-            Venue discovery, joining games, and personal bookings now live in a distinct player
-            flow.
-          </p>
-          <div class="actions">
-            <a mat-button routerLink="/venues">Browse venues</a>
-            <a mat-button routerLink="/activities">Community games</a>
-          </div>
-        </mat-card>
-
-        <mat-card class="role-card muted-grid">
-          <span class="inline-label">Owner space</span>
-          <h2>Owner tools stay separate from player actions.</h2>
-          <p>
-            Venue publishing, revenue metrics, and dashboard actions remain contained in the owner
-            workspace.
-          </p>
-          <div class="actions">
-            <a mat-button routerLink="/owner">Owner dashboard</a>
-            <a mat-button routerLink="/profile">Account settings</a>
-          </div>
-        </mat-card>
       </section>
 
       <section class="section-card">
@@ -291,16 +262,6 @@ export class DashboardPageComponent {
       return '';
     }
     return 'Browse venues and activities coming from the live services. Host or book to populate your account.';
-  });
-
-  protected readonly roleNote = computed(() => {
-    if (this.currentUser()?.role === 'OWNER') {
-      return 'Owner role detected. Owner-only navigation and metrics are active.';
-    }
-    if (this.currentUser()) {
-      return 'Player role detected. Venue booking and activities are prioritized.';
-    }
-    return 'Guest mode active. Register as Player or Owner to unlock separate experiences.';
   });
 
   protected readonly heroHighlightTitle = computed(() =>

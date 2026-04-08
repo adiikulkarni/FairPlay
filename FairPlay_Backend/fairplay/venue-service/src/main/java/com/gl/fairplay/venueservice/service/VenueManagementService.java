@@ -1,5 +1,6 @@
 package com.gl.fairplay.venueservice.service;
 
+import com.gl.fairplay.venueservice.common.BusinessValidationException;
 import com.gl.fairplay.venueservice.common.ResourceNotFoundException;
 import com.gl.fairplay.venueservice.domain.Booking;
 import com.gl.fairplay.venueservice.domain.BookingStatus;
@@ -85,6 +86,11 @@ public class VenueManagementService {
     @Transactional
     public VenueResponse updateVenue(Long venueId, VenueUpdateRequest request) {
         Venue venue = getVenueEntity(venueId);
+
+        if (!venue.getOwnerId().equals(currentOwnerId)) {
+            throw new BusinessValidationException("You can update only your own venues");
+        }
+
         if (request.name() != null && !request.name().isBlank()) {
             venue.setName(request.name().trim());
         }
@@ -118,8 +124,14 @@ public class VenueManagementService {
         List<Long> venueIds = venues.stream().map(Venue::getId).toList();
         List<Booking> bookings = venueIds.isEmpty() ? List.of() : bookingRepository.findByVenueIdIn(venueIds);
 
-        long activeBookings = bookings.stream().filter(booking -> booking.getStatus() == BookingStatus.BOOKED).count();
-        long cancelledBookings = bookings.stream().filter(booking -> booking.getStatus() == BookingStatus.CANCELLED).count();
+        long activeBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() == BookingStatus.BOOKED)
+                .count();
+
+        long cancelledBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() == BookingStatus.CANCELLED)
+                .count();
+
         BigDecimal totalEarnings = bookings.stream()
                 .filter(booking -> booking.getStatus() == BookingStatus.BOOKED)
                 .map(Booking::getTotalPrice)
