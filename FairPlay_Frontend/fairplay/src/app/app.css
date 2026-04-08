@@ -16,7 +16,7 @@
   top: 0;
   z-index: 20;
   gap: 1.25rem;
-  min-height: 74px;
+  min-height: 80px;
   padding: 0 1.5rem;
   background: rgba(248, 252, 249, 0.88);
   backdrop-filter: blur(20px);
@@ -30,7 +30,7 @@
   gap: 0.85rem;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--primary);
   letter-spacing: -0.03em;
 }
@@ -46,6 +46,29 @@
   font-size: 0.9rem;
   box-shadow: 0 12px 24px rgba(0, 109, 57, 0.22);
 }
+
+.brand-logo {
+    /* Set a base height for mobile */
+    height: 100px; 
+    width: auto;
+    display: block;
+    object-fit: contain;
+    transition: height 0.2s ease;
+  }
+  
+  /* Responsive adjustment for larger screens
+  @media (min-width: 768px) {
+    .brand-logo {
+      height: 56px; /* Slightly larger on tablets/desktops */
+    /* }
+  } */
+/* 
+  @media (min-width: 1200px) {
+    .brand-logo {
+      height: 64px; /* Professional size for large monitors */
+    /* } */
+  /* }  */ 
+
 
 .main-nav {
   display: flex;
