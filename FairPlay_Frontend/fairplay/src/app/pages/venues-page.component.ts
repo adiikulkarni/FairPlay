@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -32,52 +32,33 @@ import { FairplayStore } from '../services/fairplay-store.service';
   ],
   template: `
     <section class="page-grid">
-      <section class="hero-copy-grid">
-        <div class="section-card page-grid">
-          <div class="headline">
-            <div>
-              <span class="inline-label">Player booking zone</span>
-              <h1 class= "venueH1">Find and book venues</h1>
-              <p>Search by location and sport, then pick a venue to create a slot.</p>
+      <section class="split-layout venues-dashboard-layout">
+        <div class="page-grid venues-main-column">
+          <section class="section-card page-grid venues-hero-card">
+            <div class="headline">
+              <div>
+                <span class="inline-label">Player booking zone</span>
+                <h1 class="venueH1">Find and book venues</h1>
+                <p>Search by location and sport, then pick a venue to create a slot.</p>
+              </div>
             </div>
-          </div>
 
-          <form [formGroup]="filterForm" (ngSubmit)="search()" class="form-grid-two">
-            <mat-form-field appearance="outline">
-              <mat-label>Location</mat-label>
-              <input matInput formControlName="location" placeholder="City or area" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Sport type</mat-label>
-              <input matInput formControlName="sportType" placeholder="Badminton, football..." />
-            </mat-form-field>
-            <div class="wide-form-actions">
-              <button mat-flat-button color="primary" type="submit">Search venues</button>
-              <button mat-stroked-button type="button" (click)="resetFilters()">Clear filters</button>
-            </div>
-          </form>
+            <form [formGroup]="filterForm" (ngSubmit)="search()" class="form-grid-two">
+              <mat-form-field appearance="outline">
+                <mat-label>Location</mat-label>
+                <input matInput formControlName="location" placeholder="City or area" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Sport type</mat-label>
+                <input matInput formControlName="sportType" placeholder="Badminton, football..." />
+              </mat-form-field>
+              <div class="wide-form-actions">
+                <button mat-flat-button color="primary" type="submit">Search venues</button>
+                <button mat-stroked-button type="button" (click)="resetFilters()">Clear filters</button>
+              </div>
+            </form>
+          </section>
 
-        </div>
-
-        <div class="media-banner">
-          <img [src]="selectedVenueImage()" [alt]="selectedVenueName()" />
-          <div class="media-banner-copy muted-grid">
-            <mat-chip-set>
-              <mat-chip>{{ selectedVenueSport() || 'Venue' }}</mat-chip>
-              <mat-chip *ngIf="selectedVenue()">Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hr</mat-chip>
-            </mat-chip-set>
-            <strong>{{ selectedVenueName('Select a venue to preview') }}</strong>
-            <p>
-              {{ selectedVenue()
-                ? 'Selected venue details are loaded from the backend.'
-                : 'Use filters to load venues and pick one to book.' }}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="split-layout">
-        <div class="page-grid">
           <section class="section-card">
             <div class="section-header">
               <div class="muted-grid">
@@ -93,7 +74,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
               <mat-spinner diameter="36"></mat-spinner>
             </div>
 
-            <div class="tile-grid" *ngIf="!loadingVenues()">
+            <div class="venues-results-grid" *ngIf="!loadingVenues()">
               @for (venue of venues(); track venue.id) {
                 <mat-card class="venue-card">
                   <div class="card-media">
@@ -120,6 +101,103 @@ import { FairplayStore } from '../services/fairplay-store.service';
               }
             </div>
           </section>
+        </div>
+
+        <div class="page-grid venues-side-column">
+          <aside class="booking-shell">
+            <div class="booking-media">
+              <img [src]="selectedVenueImage()" [alt]="selectedVenueName()" />
+              <div class="media-banner-copy muted-grid">
+                <mat-chip-set>
+                  <mat-chip>{{ selectedVenueSport() || 'Venue' }}</mat-chip>
+                  <mat-chip *ngIf="selectedVenue()">Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hr</mat-chip>
+                </mat-chip-set>
+                <strong>{{ selectedVenueName('Select a venue to preview') }}</strong>
+                <p>
+                  {{ selectedVenue()
+                    ? 'Selected venue details are loaded from the backend.'
+                    : 'Use filters to load venues and pick one to book.' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="booking-sidebar">
+              <div class="booking-sidebar-header">
+                <div class="booking-price-block">
+                  <span class="booking-eyebrow">Price from</span>
+                  <div class="booking-price-row">
+                    <strong class="booking-price">Rs {{ selectedVenuePrice() | number: '1.0-0' }}</strong>
+                    <span class="booking-price-unit">/ hour</span>
+                  </div>
+                  <h2 class="booking-venue-title">{{ selectedVenueName('No venue selected') }}</h2>
+                  <p class="booking-venue-location">{{ selectedVenueLocation() }}</p>
+                </div>
+
+                <div class="booking-confirmation">
+                  <mat-icon>verified</mat-icon>
+                  <span>Instant confirmation</span>
+                </div>
+              </div>
+
+              <form [formGroup]="bookingForm" (ngSubmit)="createBooking()" class="booking-sidebar-form">
+                <section class="booking-section">
+                  <span class="booking-section-label">Select date</span>
+                  <mat-form-field appearance="outline" class="booking-picker-field">
+                    <mat-label>Choose booking date</mat-label>
+                    <input matInput [matDatepicker]="bookingDatePicker" formControlName="slotDate" />
+                    <mat-datepicker-toggle matIconSuffix [for]="bookingDatePicker"></mat-datepicker-toggle>
+                    <mat-datepicker #bookingDatePicker touchUi></mat-datepicker>
+                  </mat-form-field>
+                </section>
+
+                <section class="booking-section">
+                  <span class="booking-section-label">Select time</span>
+                  <mat-form-field appearance="outline" class="booking-picker-field">
+                    <mat-label>Choose booking time</mat-label>
+                    <input matInput [matTimepicker]="bookingTimePicker" formControlName="slotTime" />
+                    <mat-timepicker-toggle matIconSuffix [for]="bookingTimePicker"></mat-timepicker-toggle>
+                    <mat-timepicker #bookingTimePicker></mat-timepicker>
+                  </mat-form-field>
+                </section>
+
+                <section class="booking-section">
+                  <span class="booking-section-label">Duration</span>
+                  <div class="booking-toggle-row">
+                    @for (hours of durationChoices; track hours) {
+                      <button
+                        type="button"
+                        class="booking-toggle"
+                        [class.active]="bookingForm.controls.durationHours.getRawValue() === hours"
+                        (click)="bookingForm.patchValue({ durationHours: hours })"
+                      >
+                        {{ hours }} hr
+                      </button>
+                    }
+                  </div>
+                </section>
+
+                <div class="booking-summary">
+                  <div class="booking-summary-row">
+                    <span>{{ bookingSummaryLabel() }}</span>
+                    <strong>Rs {{ bookingSubtotal() | number: '1.0-0' }}</strong>
+                  </div>
+                  <div class="booking-summary-row">
+                    <span>Service fee</span>
+                    <strong>Rs {{ bookingServiceFee() | number: '1.0-0' }}</strong>
+                  </div>
+                  <div class="booking-summary-row booking-total-row">
+                    <span>Estimated total</span>
+                    <strong>Rs {{ bookingEstimatedTotal() | number: '1.0-0' }}</strong>
+                  </div>
+                </div>
+
+                <p class="form-error" *ngIf="message()">{{ message() }}</p>
+                <button mat-flat-button color="primary" type="submit" class="booking-cta" [disabled]="!selectedVenue()">
+                  Book Now
+                </button>
+              </form>
+            </div>
+          </aside>
 
           <section class="section-card" id="bookings">
             <div class="section-header">
@@ -156,47 +234,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
             </div>
           </section>
         </div>
-
-        <aside class="booking-sidebar">
-          <div class="muted-grid">
-            <span class="inline-label">Quick booking</span>
-            <h2>{{ selectedVenueName('No venue selected') }}</h2>
-            <p>Price: Rs {{ selectedVenuePrice() | number: '1.0-0' }}/hour</p>
-          </div>
-
-          <form [formGroup]="bookingForm" (ngSubmit)="createBooking()" class="page-grid">
-            <mat-form-field appearance="outline">
-              <mat-label>Select date</mat-label>
-              <input matInput [matDatepicker]="bookingDatePicker" formControlName="slotDate" />
-              <mat-datepicker-toggle matIconSuffix [for]="bookingDatePicker"></mat-datepicker-toggle>
-              <mat-datepicker #bookingDatePicker></mat-datepicker>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Select time</mat-label>
-              <input matInput [matTimepicker]="bookingTimePicker" formControlName="slotTime" />
-              <mat-timepicker-toggle matIconSuffix [for]="bookingTimePicker"></mat-timepicker-toggle>
-              <mat-timepicker #bookingTimePicker></mat-timepicker>
-            </mat-form-field>
-
-            <div class="muted-grid">
-              <strong>Duration</strong>
-              <mat-chip-set>
-                @for (hours of durationChoices; track hours) {
-                  <mat-chip-option
-                    [selected]="bookingForm.controls.durationHours.getRawValue() === hours"
-                    (click)="bookingForm.patchValue({ durationHours: hours })"
-                  >
-                    {{ hours }} hr
-                  </mat-chip-option>
-                }
-              </mat-chip-set>
-            </div>
-
-            <p class="form-error" *ngIf="message()">{{ message() }}</p>
-            <button mat-flat-button color="primary" type="submit">Book selected venue</button>
-          </form>
-        </aside>
       </section>
     </section>
   `
@@ -219,7 +256,7 @@ export class VenuesPageComponent {
 
   protected readonly bookingForm = this.fb.group({
     venueId: this.fb.nonNullable.control(0, [Validators.required, Validators.min(1)]),
-    slotDate: new FormControl<Date | null>(null, Validators.required),
+    slotDate: new FormControl<Date | null>(new Date(), Validators.required),
     slotTime: new FormControl<Date | null>(null, Validators.required),
     durationHours: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1), Validators.max(12)])
   });
@@ -230,6 +267,26 @@ export class VenuesPageComponent {
   });
 
   constructor() {
+    effect(() => {
+      const venues = this.venues();
+      if (!venues.length) {
+        this.selectedVenueId.set(null);
+        this.bookingForm.patchValue({ venueId: 0 }, { emitEvent: false });
+        return;
+      }
+
+      const requestedVenueId = this.selectedVenueId();
+      const resolvedVenueId = venues.some((venue) => venue.id === requestedVenueId) ? requestedVenueId : venues[0].id;
+
+      if (resolvedVenueId !== requestedVenueId) {
+        this.selectedVenueId.set(resolvedVenueId);
+      }
+
+      if (resolvedVenueId && this.bookingForm.controls.venueId.getRawValue() !== resolvedVenueId) {
+        this.bookingForm.patchValue({ venueId: resolvedVenueId }, { emitEvent: false });
+      }
+    });
+
     const user = this.store.currentUser();
     this.selectedVenueId.set(this.venues()[0]?.id ?? null);
     this.syncSelectedVenue();
@@ -321,6 +378,27 @@ export class VenuesPageComponent {
 
   protected venueImage(_: string): string {
     return '/venue-placeholder.jpeg';
+  }
+
+  protected bookingSummaryLabel(): string {
+    const duration = this.bookingForm.controls.durationHours.getRawValue() ?? 1;
+    const venueName = this.selectedVenueName('Selected venue');
+    return `${duration} hour${duration === 1 ? '' : 's'} x ${venueName}`;
+  }
+
+  protected bookingSubtotal(): number {
+    return this.selectedVenuePrice() * (this.bookingForm.controls.durationHours.getRawValue() ?? 1);
+  }
+
+  protected bookingServiceFee(): number {
+    if (!this.selectedVenue()) {
+      return 0;
+    }
+    return Math.round(this.bookingSubtotal() * 0.05);
+  }
+
+  protected bookingEstimatedTotal(): number {
+    return this.bookingSubtotal() + this.bookingServiceFee();
   }
 
   private syncSelectedVenue(): void {
