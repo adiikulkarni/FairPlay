@@ -188,7 +188,6 @@ mat-card {
 .hero-copy-grid,
 .quick-links-grid,
 .metrics-grid,
-.role-panels,
 .cta-grid,
 .tile-grid {
   display: grid;
@@ -208,10 +207,6 @@ mat-card {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.role-panels {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .cta-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -223,7 +218,6 @@ mat-card {
 .dashboard-stat,
 .quick-link-card,
 .overview-card,
-.role-card,
 .cta-card {
   height: 100%;
 }
@@ -234,7 +228,6 @@ mat-card {
 
 .quick-link-card,
 .overview-card,
-.role-card,
 .cta-card {
   padding: 1.5rem;
 }
@@ -668,7 +661,6 @@ mat-card {
   .amenities-grid,
   .metrics-grid,
   .quick-links-grid,
-  .role-panels,
   .cta-grid,
   .tile-grid,
   .form-grid-two {
@@ -724,4 +716,28 @@ mat-card {
 
 .hero-panel a:hover .mat-mdc-button-touch-target {
   background-color: #0c7a47;
+}
+
+.venueH1{
+  color: green;
+}
+
+.activitiesH1{
+  color: green;
+}
+
+.reviewH1{
+  color: green;
+}
+
+.plus{
+  color: white;
+}
+
+.a{
+  color: #DDFBEA;
+}
+
+.b{
+  color: rgb(147, 142, 142);
 }

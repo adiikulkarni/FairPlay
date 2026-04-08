@@ -29,11 +29,11 @@ import { Booking } from '../models';
         <div class="headline">
           <div>
             <span class="inline-label">Bookings overview</span>
-            <h2>Review your bookings</h2>
+            <h2 class="reviewH1">Review your bookings</h2>
 <!--            <p>Yeh Booking na Milegi Dobara</p>-->
           </div>
           <a mat-stroked-button color="primary" routerLink="/venues">
-            <mat-icon>add</mat-icon>
+            <mat-icon class= "plus">add</mat-icon>
             New booking
           </a>
         </div>
