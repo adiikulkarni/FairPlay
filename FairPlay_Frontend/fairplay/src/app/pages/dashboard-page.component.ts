@@ -23,7 +23,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
   template: `
     <section class="page-grid">
       <section class="hero-copy-grid">
-        <div class="hero-panel page-grid">
+        <div class="hero-panel page-grid dashboard-hero-panel">
           <div class="headline">
             <div>
               <span class="inline-label">{{
@@ -43,7 +43,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
             }}</a>
           </div>
 
-          <div class="surface-note">{{ roleNote() }}</div>
         </div>
 
         <div class="media-banner">
@@ -291,16 +290,6 @@ export class DashboardPageComponent {
       return '';
     }
     return 'Browse venues and activities coming from the live services. Host or book to populate your account.';
-  });
-
-  protected readonly roleNote = computed(() => {
-    if (this.currentUser()?.role === 'OWNER') {
-      return 'Owner role detected. Owner-only navigation and metrics are active.';
-    }
-    if (this.currentUser()) {
-      return 'Player role detected. Venue booking and activities are prioritized.';
-    }
-    return 'Guest mode active. Register as Player or Owner to unlock separate experiences.';
   });
 
   protected readonly heroHighlightTitle = computed(() =>
