@@ -44,8 +44,10 @@ import { FairplayStore } from '../services/fairplay-store.service';
               <input matInput type="password" formControlName="password" />
             </mat-form-field>
             <p class="form-error" *ngIf="message()">{{ message() }}</p>
+            <div class="form-actions">
             <button mat-flat-button color="primary" type="submit">Login</button>
             <a mat-button routerLink="/register">Create account</a>
+            </div>
           </form>
         </div>
       </div>
