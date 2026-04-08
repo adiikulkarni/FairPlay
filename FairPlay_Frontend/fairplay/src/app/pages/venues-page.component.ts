@@ -126,7 +126,8 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 <div class="booking-price-block">
                   <span class="booking-eyebrow">Price from</span>
                   <div class="booking-price-row">
-                    <strong class="booking-price">Rs {{ selectedVenuePrice() | number: '1.0-0' }}</strong>
+                    <span class="booking-currency">Rs</span>
+                    <strong class="booking-price">{{ selectedVenuePrice() | number: '1.0-0' }}</strong>
                     <span class="booking-price-unit">/ hour</span>
                   </div>
                   <h2 class="booking-venue-title">{{ selectedVenueName('No venue selected') }}</h2>
@@ -181,12 +182,8 @@ import { FairplayStore } from '../services/fairplay-store.service';
                     <span>{{ bookingSummaryLabel() }}</span>
                     <strong>Rs {{ bookingSubtotal() | number: '1.0-0' }}</strong>
                   </div>
-                  <div class="booking-summary-row">
-                    <span>Service fee</span>
-                    <strong>Rs {{ bookingServiceFee() | number: '1.0-0' }}</strong>
-                  </div>
                   <div class="booking-summary-row booking-total-row">
-                    <span>Estimated total</span>
+                    <span>Total</span>
                     <strong>Rs {{ bookingEstimatedTotal() | number: '1.0-0' }}</strong>
                   </div>
                 </div>
@@ -390,15 +387,8 @@ export class VenuesPageComponent {
     return this.selectedVenuePrice() * (this.bookingForm.controls.durationHours.getRawValue() ?? 1);
   }
 
-  protected bookingServiceFee(): number {
-    if (!this.selectedVenue()) {
-      return 0;
-    }
-    return Math.round(this.bookingSubtotal() * 0.05);
-  }
-
   protected bookingEstimatedTotal(): number {
-    return this.bookingSubtotal() + this.bookingServiceFee();
+    return this.bookingSubtotal();
   }
 
   private syncSelectedVenue(): void {

@@ -542,6 +542,8 @@ mat-card {
 .booking-price-block {
   display: grid;
   gap: 0.2rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .booking-eyebrow,
@@ -556,20 +558,32 @@ mat-card {
 .booking-price-row {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.3rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.booking-currency {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
 }
 
 .booking-price {
   font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 2.35rem);
+  font-size: clamp(1.45rem, 3vw, 2.05rem);
   line-height: 1;
   color: var(--primary);
 }
 
 .booking-price-unit {
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .booking-venue-title {
@@ -592,6 +606,7 @@ mat-card {
   letter-spacing: 0.08em;
   text-align: right;
   text-transform: uppercase;
+  flex: 0 0 auto;
 }
 
 .booking-confirmation mat-icon {
