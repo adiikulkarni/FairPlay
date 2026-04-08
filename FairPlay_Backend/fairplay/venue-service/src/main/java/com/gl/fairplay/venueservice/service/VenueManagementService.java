@@ -84,7 +84,7 @@ public class VenueManagementService {
      * @return updated venue
      */
     @Transactional
-    public VenueResponse updateVenue(Long venueId, VenueUpdateRequest request) {
+    public VenueResponse updateVenue(Long venueId,Long currentOwnerId, VenueUpdateRequest request) {
         Venue venue = getVenueEntity(venueId);
 
         if (!venue.getOwnerId().equals(currentOwnerId)) {
