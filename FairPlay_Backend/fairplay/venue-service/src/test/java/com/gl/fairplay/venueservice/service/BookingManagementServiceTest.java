@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.gl.fairplay.venueservice.common.BusinessValidationException;
 import com.gl.fairplay.venueservice.domain.Booking;
 import com.gl.fairplay.venueservice.domain.BookingStatus;
+import com.gl.fairplay.venueservice.domain.Role;
 import com.gl.fairplay.venueservice.domain.Venue;
 import com.gl.fairplay.venueservice.integration.dto.UserSummary;
 import com.gl.fairplay.venueservice.repository.BookingRepository;
@@ -52,8 +53,9 @@ class BookingManagementServiceTest {
     @Test
     void createBookingRejectsUnavailableSlot() {
         LocalDateTime slot = LocalDateTime.now().plusDays(1);
+
         when(userValidationService.validateUser(1L))
-                .thenReturn(new UserSummary(1L, "User", "u@example.com", "9999999999", com.gl.fairplay.venueservice.domain.Role.USER));
+                .thenReturn(new UserSummary(1L, "User", "u@example.com", "9999999999", Role.USER));
         when(venueManagementService.getVenueEntity(2L))
                 .thenReturn(Venue.builder().id(2L).pricePerHour(BigDecimal.valueOf(800)).build());
         when(bookingRepository.findAll()).thenReturn(List.of(
@@ -66,8 +68,9 @@ class BookingManagementServiceTest {
     @Test
     void createBookingCalculatesTotalPrice() {
         LocalDateTime slot = LocalDateTime.now().plusDays(1);
+
         when(userValidationService.validateUser(1L))
-                .thenReturn(new UserSummary(1L, "User", "u@example.com", "9999999999", com.gl.fairplay.venueservice.domain.Role.USER));
+                .thenReturn(new UserSummary(1L, "User", "u@example.com", "9999999999", Role.USER));
         when(venueManagementService.getVenueEntity(2L))
                 .thenReturn(Venue.builder().id(2L).pricePerHour(BigDecimal.valueOf(800)).build());
         when(bookingRepository.findAll()).thenReturn(List.of());
@@ -96,7 +99,11 @@ class BookingManagementServiceTest {
                 .build()));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var response = bookingManagementService.updateBooking(5L, new BookingUpdateRequest(null, BookingStatus.CANCELLED));
+        var response = bookingManagementService.updateBooking(
+                5L,
+                1L,
+                Role.USER,
+                new BookingUpdateRequest(null, BookingStatus.CANCELLED));
 
         assertThat(response.status()).isEqualTo(BookingStatus.CANCELLED);
     }
