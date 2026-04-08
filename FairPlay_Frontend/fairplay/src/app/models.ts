@@ -77,5 +77,8 @@ export interface UserUpdateRequest {
   name: string;
   email: string;
   phone: string;
-  role: Role;
+}
+
+export interface AuthResponse {
+  token: string;
 }
