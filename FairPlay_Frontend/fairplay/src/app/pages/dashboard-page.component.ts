@@ -30,7 +30,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 currentUser() ? roleTitle() : 'FairPlay platform'
               }}</span>
               <h1>{{ heroTitle() }}</h1>
-              <p>{{ heroText() }}</p>
+              <p class= "a">{{ heroText() }}</p>
             </div>
           </div>
 
