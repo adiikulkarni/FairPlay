@@ -168,7 +168,7 @@ export class FairplayStore {
     await this.loadActivities();
   }
 
-  async createVenue(payload: { name: string; location: string; sportType: string; pricePerHour: number }): Promise<void> {
+  async createVenue(payload: { name: string; location: string; sportType: string; pricePerHour: number, amenities: string[],about: string; }): Promise<void> {
     const user = this.requireOwner();
     await this.request(() =>
       this.http.post<Venue>(this.url('/venues'), {

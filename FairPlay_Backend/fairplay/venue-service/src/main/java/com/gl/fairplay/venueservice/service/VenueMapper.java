@@ -25,6 +25,8 @@ public class VenueMapper {
                 venue.getLocation(),
                 venue.getSportType(),
                 venue.getPricePerHour(),
+                venue.getAmenities(),
+                venue.getAbout(),
                 venue.getOwnerId()
         );
     }

@@ -23,6 +23,8 @@ export interface Venue {
   sportType: string;
   pricePerHour: number;
   ownerId?: number;
+   amenities?: string[];
+  about?: string;
 }
 
 export interface Activity {

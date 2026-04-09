@@ -13,8 +13,11 @@ import com.gl.fairplay.venueservice.web.dto.VenueResponse;
 import com.gl.fairplay.venueservice.web.dto.VenueUpdateRequest;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +42,8 @@ public class VenueManagementService {
                 .location(request.location().trim())
                 .sportType(request.sportType().trim())
                 .pricePerHour(request.pricePerHour())
+                .amenities(normalizeAmenities(request.amenities()))
+                .about(trimToNull(request.about()))
                 .ownerId(request.ownerId())
                 .build();
 
