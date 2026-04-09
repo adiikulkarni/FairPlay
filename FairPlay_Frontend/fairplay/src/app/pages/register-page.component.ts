@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { Role } from '../models';
-import { placeholderImage } from '../placeholder-images';
+import { heroDefault } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
@@ -30,13 +30,9 @@ import { FairplayStore } from '../services/fairplay-store.service';
       <div class="auth-layout">
         <div class="showcase-panel" [style.background-image]="'url(' + heroImage + ')'">
           <div class="showcase-copy">
-            <span class="inline-label">Create account</span>
+            <span class="a">Create account</span>
             <h1>Register as player or owner.</h1>
             <p>The role split starts here so each user lands in the correct interface after signup.</p>
-            <mat-chip-set>
-              <mat-chip>Player journey</mat-chip>
-              <mat-chip>Owner journey</mat-chip>
-            </mat-chip-set>
           </div>
         </div>
 
@@ -75,9 +71,9 @@ import { FairplayStore } from '../services/fairplay-store.service';
             </mat-form-field>
 
             <p class="form-error" *ngIf="message()">{{ message() }}</p>
-            <div class="form-actions">
-            <button mat-flat-button color="primary" type="submit">Create account</button>
-            <a mat-button routerLink="/login">Already have an account?</a>
+            <div class="wide-form-actions">
+              <button mat-flat-button color="primary" type="submit">Create account</button>
+              <a mat-button routerLink="/login">Already have an account?</a>
             </div>
           </form>
         </div>
@@ -90,7 +86,7 @@ export class RegisterPageComponent {
   private readonly store = inject(FairplayStore);
   private readonly router = inject(Router);
 
-  protected readonly heroImage = placeholderImage(1200, 900, 'FairPlay Register');
+  protected readonly heroImage = heroDefault;
   protected readonly message = signal('');
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],

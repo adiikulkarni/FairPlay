@@ -26,8 +26,8 @@ import { FairplayStore } from '../services/fairplay-store.service';
     <section class="page-grid">
       <div class="headline">
         <div>
-          <h1>Profile</h1>
-          <p>Account details stay editable here while player and owner workspaces remain separate.</p>
+          <h1 class= "venueH1">Profile</h1>
+          
         </div>
       </div>
 

@@ -70,8 +70,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <p class="form-error" *ngIf="message()">{{ message() }}</p>
         </div>
 
-        <div class="media-banner">
-          <img [src]="heroImage()" alt="Activity hero" />
+        <div class="media-banner" [style.background-image]="'linear-gradient(180deg, rgba(0, 109, 57, 0.08), rgba(12, 31, 24, 0.12)), url(' + heroImage() + ')'">
           <div class="media-banner-copy muted-grid">
             <mat-chip-set>
               <mat-chip>{{ activities().length }} live</mat-chip>
@@ -179,9 +178,7 @@ export class ActivitiesPageComponent {
     return sorted[0] ?? null;
   });
 
-  protected readonly heroImage = computed(() =>
-    sportPlaceholder(this.nextActivity()?.sportType ?? 'Activity', 1200, 800)
-  );
+  protected readonly heroImage = computed(() => '/sports-tools.jpg');
 
   protected readonly heroSummary = computed(() => {
     const activities = this.activities();
@@ -302,7 +299,8 @@ export class ActivitiesPageComponent {
   }
 
   protected activityImage(_: string): string {
-    return '/activities.jpeg';
+    return 'activities.jpeg';
+    
   }
 
   private uniqueCount(values: string[]): number {
