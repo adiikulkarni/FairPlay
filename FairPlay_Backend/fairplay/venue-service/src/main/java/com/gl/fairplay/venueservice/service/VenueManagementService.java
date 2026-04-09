@@ -1,5 +1,6 @@
 package com.gl.fairplay.venueservice.service;
 
+import com.gl.fairplay.venueservice.common.BusinessValidationException;
 import com.gl.fairplay.venueservice.common.ResourceNotFoundException;
 import com.gl.fairplay.venueservice.domain.Booking;
 import com.gl.fairplay.venueservice.domain.BookingStatus;
@@ -12,8 +13,11 @@ import com.gl.fairplay.venueservice.web.dto.VenueResponse;
 import com.gl.fairplay.venueservice.web.dto.VenueUpdateRequest;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +48,8 @@ public class VenueManagementService {
                 .location(request.location().trim())
                 .sportType(request.sportType().trim())
                 .pricePerHour(request.pricePerHour())
+                .amenities(normalizeAmenities(request.amenities()))
+                .about(trimToNull(request.about()))
                 .ownerId(request.ownerId())
                 .build();
 
@@ -78,8 +84,13 @@ public class VenueManagementService {
      * @return updated venue
      */
     @Transactional
-    public VenueResponse updateVenue(Long venueId, VenueUpdateRequest request) {
+    public VenueResponse updateVenue(Long venueId,Long currentOwnerId, VenueUpdateRequest request) {
         Venue venue = getVenueEntity(venueId);
+
+        if (!venue.getOwnerId().equals(currentOwnerId)) {
+            throw new BusinessValidationException("You can update only your own venues");
+        }
+
         if (request.name() != null && !request.name().isBlank()) {
             venue.setName(request.name().trim());
         }
@@ -91,6 +102,12 @@ public class VenueManagementService {
         }
         if (request.pricePerHour() != null) {
             venue.setPricePerHour(request.pricePerHour());
+        }
+        if (request.amenities() != null) {
+            venue.setAmenities(normalizeAmenities(request.amenities()));
+        }
+        if (request.about() != null) {
+            venue.setAbout(trimToNull(request.about()));
         }
         return mapper.toVenueResponse(venueRepository.save(venue));
     }
@@ -107,8 +124,14 @@ public class VenueManagementService {
         List<Long> venueIds = venues.stream().map(Venue::getId).toList();
         List<Booking> bookings = venueIds.isEmpty() ? List.of() : bookingRepository.findByVenueIdIn(venueIds);
 
-        long activeBookings = bookings.stream().filter(booking -> booking.getStatus() == BookingStatus.BOOKED).count();
-        long cancelledBookings = bookings.stream().filter(booking -> booking.getStatus() == BookingStatus.CANCELLED).count();
+        long activeBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() == BookingStatus.BOOKED)
+                .count();
+
+        long cancelledBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() == BookingStatus.CANCELLED)
+                .count();
+
         BigDecimal totalEarnings = bookings.stream()
                 .filter(booking -> booking.getStatus() == BookingStatus.BOOKED)
                 .map(Booking::getTotalPrice)
@@ -144,5 +167,23 @@ public class VenueManagementService {
             return null;
         }
         return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private List<String> normalizeAmenities(List<String> amenities) {
+        if (amenities == null) {
+            return new ArrayList<>();
+        }
+        return amenities.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

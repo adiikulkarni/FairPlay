@@ -1,13 +1,17 @@
 package com.gl.fairplay.userservice.web;
 
+import com.gl.fairplay.userservice.common.BusinessValidationException;
+import com.gl.fairplay.userservice.security.AuthenticatedUser;
+import com.gl.fairplay.userservice.security.JwtService;
 import com.gl.fairplay.userservice.service.UserManagementService;
-import com.gl.fairplay.userservice.web.dto.LoginRequest;
-import com.gl.fairplay.userservice.web.dto.UserRegistrationRequest;
-import com.gl.fairplay.userservice.web.dto.UserResponse;
-import com.gl.fairplay.userservice.web.dto.UserUpdateRequest;
+import com.gl.fairplay.userservice.web.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserManagementService userManagementService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     /**
      * Registers a new user.
@@ -45,9 +51,16 @@ public class UserController {
      * @param request login request
      * @return authenticated user
      */
+
     @PostMapping("/login")
-    public UserResponse login(@Valid @RequestBody LoginRequest request) {
-        return userManagementService.login(request);
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email().trim().toLowerCase(),
+                        request.password()));
+
+        AuthenticatedUser currentUser = (AuthenticatedUser) authentication.getPrincipal();
+        return new AuthResponse(jwtService.generateToken(currentUser));
     }
 
     /**
@@ -69,7 +82,17 @@ public class UserController {
      * @return updated user
      */
     @PutMapping("/{userId}")
-    public UserResponse updateUser(@PathVariable Long userId, @Valid @RequestBody UserUpdateRequest request) {
+    public UserResponse updateUser(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                   @PathVariable Long userId,
+                                   @Valid @RequestBody UserUpdateRequest request) {
+        if (!currentUser.getId().equals(userId)) {
+            throw new BusinessValidationException("You can update only your own profile");
+        }
         return userManagementService.updateUser(userId, request);
+    }
+
+    @GetMapping("/me")
+    public UserResponse getCurrentUser(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return userManagementService.getUser(currentUser.getId());
     }
 }

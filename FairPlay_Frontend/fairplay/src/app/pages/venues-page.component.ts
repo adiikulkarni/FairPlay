@@ -89,6 +89,30 @@ import { FairplayStore } from '../services/fairplay-store.service';
                     </div>
                     <p>{{ venue.location }}</p>
                     <p>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hour</p>
+
+                    <button mat-button color="primary" (click)="toggleDetails(venue.id)">
+                      {{ expandedVenueId() === venue.id ? 'Hide details' : 'View details' }}
+                    </button>
+
+                     <!-- ✅ NEW: Expandable Section -->
+                     <div *ngIf="expandedVenueId() === venue.id" class="venue-details">
+
+                    <!-- Amenities -->
+                      <div *ngIf="venue.amenities?.length">
+                      <strong>Amenities:</strong>
+                     <mat-chip-set>
+                      @for (item of venue.amenities; track item) {
+                         <mat-chip>{{ item }}</mat-chip>
+                         }
+                      </mat-chip-set>
+                    </div>
+
+              <!-- About -->
+                <div *ngIf="venue.about">
+                 <strong>About:</strong>
+                  <p>{{ venue.about }}</p>
+                </div>
+                </div>
                     <div class="actions">
                       <button mat-stroked-button type="button" (click)="selectVenue(venue.id)">Select</button>
                     </div>
@@ -250,7 +274,15 @@ export class VenuesPageComponent {
     location: [''],
     sportType: ['']
   });
+   //for view details
+  protected readonly expandedVenueId = signal<number | null>(null);
 
+protected toggleDetails(id: number) {
+  this.expandedVenueId.set(
+    this.expandedVenueId() === id ? null : id
+  );
+  //
+}
   protected readonly bookingForm = this.fb.group({
     venueId: this.fb.nonNullable.control(0, [Validators.required, Validators.min(1)]),
     slotDate: new FormControl<Date | null>(new Date(), Validators.required),

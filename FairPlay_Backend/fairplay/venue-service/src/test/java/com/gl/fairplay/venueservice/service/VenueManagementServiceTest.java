@@ -56,6 +56,8 @@ class VenueManagementServiceTest {
                 "Pune",
                 "Badminton",
                 BigDecimal.valueOf(500),
+                List.of("Parking", "Washroom"),
+                "Indoor badminton court",
                 9L)))
                 .isInstanceOf(BusinessValidationException.class);
     }

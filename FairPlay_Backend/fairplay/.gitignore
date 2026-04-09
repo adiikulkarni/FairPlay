@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+/venue-service/resources/application.properties
+/user-service/resources/application.properties

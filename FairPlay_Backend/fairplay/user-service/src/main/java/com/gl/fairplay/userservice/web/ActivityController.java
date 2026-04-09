@@ -1,5 +1,7 @@
 package com.gl.fairplay.userservice.web;
 
+import com.gl.fairplay.userservice.common.BusinessValidationException;
+import com.gl.fairplay.userservice.security.AuthenticatedUser;
 import com.gl.fairplay.userservice.service.ActivityManagementService;
 import com.gl.fairplay.userservice.web.dto.ActivityHostRequest;
 import com.gl.fairplay.userservice.web.dto.ActivityJoinRequest;
@@ -8,6 +10,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,7 +36,12 @@ public class ActivityController {
      */
     @PostMapping("/host")
     @ResponseStatus(HttpStatus.CREATED)
-    public ActivityResponse hostActivity(@Valid @RequestBody ActivityHostRequest request) {
+    public ActivityResponse hostActivity(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                         @Valid @RequestBody ActivityHostRequest request) {
+        if (!currentUser.getId().equals(request.hostUserId())) {
+            throw new BusinessValidationException("Host user id must match authenticated user");
+        }
+
         return activityManagementService.hostActivity(request);
     }
 
@@ -44,7 +52,12 @@ public class ActivityController {
      * @return updated activity
      */
     @PostMapping("/join")
-    public ActivityResponse joinActivity(@Valid @RequestBody ActivityJoinRequest request) {
+    public ActivityResponse joinActivity(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                         @Valid @RequestBody ActivityJoinRequest request) {
+        if (!currentUser.getId().equals(request.userId())) {
+            throw new BusinessValidationException("User id must match authenticated user");
+        }
+
         return activityManagementService.joinActivity(request);
     }
 
