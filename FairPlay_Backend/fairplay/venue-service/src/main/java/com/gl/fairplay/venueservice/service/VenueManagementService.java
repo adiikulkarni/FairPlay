@@ -33,6 +33,12 @@ public class VenueManagementService {
     private final UserValidationService userValidationService;
     private final VenueMapper mapper;
 
+    /**
+     * Creates a new venue for a validated owner.
+     *
+     * @param request create request
+     * @return created venue
+     */
     @Transactional
     public VenueResponse createVenue(VenueCreateRequest request) {
         userValidationService.validateOwner(request.ownerId());
@@ -50,6 +56,13 @@ public class VenueManagementService {
         return mapper.toVenueResponse(venueRepository.save(venue));
     }
 
+    /**
+     * Returns filtered venues.
+     *
+     * @param location optional location filter
+     * @param sportType optional sport filter
+     * @return matching venues
+     */
     public List<VenueResponse> searchVenues(String location, String sportType) {
         String normalizedLocation = normalize(location);
         String normalizedSport = normalize(sportType);
@@ -63,8 +76,15 @@ public class VenueManagementService {
                 .toList();
     }
 
+    /**
+     * Updates a venue.
+     *
+     * @param venueId venue id
+     * @param request update request
+     * @return updated venue
+     */
     @Transactional
-    public VenueResponse updateVenue(Long venueId, Long currentOwnerId, VenueUpdateRequest request) {
+    public VenueResponse updateVenue(Long venueId,Long currentOwnerId, VenueUpdateRequest request) {
         Venue venue = getVenueEntity(venueId);
 
         if (!venue.getOwnerId().equals(currentOwnerId)) {
@@ -83,13 +103,23 @@ public class VenueManagementService {
         if (request.pricePerHour() != null) {
             venue.setPricePerHour(request.pricePerHour());
         }
-
+        if (request.amenities() != null) {
+            venue.setAmenities(normalizeAmenities(request.amenities()));
+        }
+        if (request.about() != null) {
+            venue.setAbout(trimToNull(request.about()));
+        }
         return mapper.toVenueResponse(venueRepository.save(venue));
     }
 
+    /**
+     * Returns owner dashboard metrics.
+     *
+     * @param ownerId owner id
+     * @return dashboard summary
+     */
     public OwnerDashboardResponse getOwnerDashboard(Long ownerId) {
         userValidationService.validateOwner(ownerId);
-
         List<Venue> venues = venueRepository.findByOwnerId(ownerId);
         List<Long> venueIds = venues.stream().map(Venue::getId).toList();
         List<Booking> bookings = venueIds.isEmpty() ? List.of() : bookingRepository.findByVenueIdIn(venueIds);
@@ -110,11 +140,23 @@ public class VenueManagementService {
         return new OwnerDashboardResponse(venues.size(), activeBookings, cancelledBookings, totalEarnings);
     }
 
+    /**
+     * Resolves a venue entity.
+     *
+     * @param venueId venue id
+     * @return persistent venue
+     */
     public Venue getVenueEntity(Long venueId) {
         return venueRepository.findById(venueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Venue not found for id " + venueId));
     }
 
+    /**
+     * Returns all venues for a validated owner.
+     *
+     * @param ownerId owner id
+     * @return venues for owner
+     */
     public List<Venue> getVenuesForOwner(Long ownerId) {
         userValidationService.validateOwner(ownerId);
         return venueRepository.findByOwnerId(ownerId);
@@ -125,5 +167,23 @@ public class VenueManagementService {
             return null;
         }
         return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private List<String> normalizeAmenities(List<String> amenities) {
+        if (amenities == null) {
+            return new ArrayList<>();
+        }
+        return amenities.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }
