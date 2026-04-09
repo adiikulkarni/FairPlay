@@ -35,7 +35,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <div class="headline">
             <div>
               <span class="inline-label">Community games</span>
-              <h1>Host your next match.</h1>
+              <h1 class="activitiesH1">Host your next match.</h1>
               <p>{{ heroSummary() }}</p>
             </div>
           </div>

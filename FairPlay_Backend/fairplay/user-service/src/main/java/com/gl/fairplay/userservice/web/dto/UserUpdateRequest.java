@@ -14,7 +14,6 @@ public record UserUpdateRequest(
         @Email(message = "Email must be valid")
         String email,
         @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone must be 10 to 15 digits")
-        String phone,
-        Role role
+        String phone
 ) {
 }

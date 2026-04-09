@@ -23,6 +23,8 @@ export interface Venue {
   sportType: string;
   pricePerHour: number;
   ownerId?: number;
+   amenities?: string[];
+  about?: string;
 }
 
 export interface Activity {
@@ -77,5 +79,8 @@ export interface UserUpdateRequest {
   name: string;
   email: string;
   phone: string;
-  role: Role;
+}
+
+export interface AuthResponse {
+  token: string;
 }

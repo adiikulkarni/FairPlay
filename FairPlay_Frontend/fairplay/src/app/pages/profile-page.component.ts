@@ -7,8 +7,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { Role } from '../models';
 import { placeholderImage } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
@@ -23,7 +21,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule
   ],
   template: `
     <section class="page-grid">
@@ -66,14 +63,6 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 <input matInput formControlName="phone" />
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Role</mat-label>
-                <mat-select formControlName="role">
-                  <mat-option value="USER">Player</mat-option>
-                  <mat-option value="OWNER">Owner</mat-option>
-                </mat-select>
-              </mat-form-field>
-
               <div class="wide-form-actions">
                 <button mat-flat-button color="primary" type="submit">Save changes</button>
               </div>
@@ -99,7 +88,6 @@ export class ProfilePageComponent {
     name: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10,15}$/)]],
-    role: ['USER' as Role, Validators.required]
   });
 
   constructor() {
@@ -109,8 +97,7 @@ export class ProfilePageComponent {
         this.form.reset({
           name: user.name,
           email: user.email,
-          phone: user.phone,
-          role: user.role
+          phone: user.phone
         });
       }
     });
