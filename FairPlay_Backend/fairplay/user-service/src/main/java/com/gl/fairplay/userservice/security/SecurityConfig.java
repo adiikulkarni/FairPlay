@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, exception) ->
                                 writeError(response, HttpStatus.FORBIDDEN, "You are not allowed to access this resource")))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/users/ping").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users", "/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/activities").permitAll()
                         .anyRequest().authenticated())

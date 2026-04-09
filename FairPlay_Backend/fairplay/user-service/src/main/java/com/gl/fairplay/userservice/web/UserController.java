@@ -91,6 +91,11 @@ public class UserController {
         return userManagementService.updateUser(userId, request);
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "Active " + java.time.Instant.now().toString();
+    }
+
     @GetMapping("/me")
     public UserResponse getCurrentUser(@AuthenticationPrincipal AuthenticatedUser currentUser) {
         return userManagementService.getUser(currentUser.getId());

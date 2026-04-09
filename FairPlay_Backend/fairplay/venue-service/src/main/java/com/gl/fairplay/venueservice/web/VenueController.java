@@ -32,6 +32,11 @@ public class VenueController {
     private final VenueManagementService venueManagementService;
     private final BookingManagementService bookingManagementService;
 
+    @GetMapping("/venues/ping")
+    public String ping() {
+        return "Active " + java.time.Instant.now().toString();
+    }
+
     @PostMapping("/venues")
     @ResponseStatus(HttpStatus.CREATED)
     public VenueResponse createVenue(@AuthenticationPrincipal AuthenticatedUser currentUser,
