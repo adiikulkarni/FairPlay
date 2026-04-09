@@ -6,6 +6,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { SportsLoaderComponent } from './components/sports-loader.component';
 import { FairplayStore } from './services/fairplay-store.service';
 
 @Component({
@@ -19,7 +20,8 @@ import { FairplayStore } from './services/fairplay-store.service';
     MatButtonModule,
     MatChipsModule,
     MatIconModule,
-    MatToolbarModule
+    MatToolbarModule,
+    SportsLoaderComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
