@@ -117,14 +117,30 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 <mat-label>Location</mat-label>
                 <input matInput formControlName="location" placeholder="City or district" />
               </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Sport type</mat-label>
                 <input matInput formControlName="sportType" placeholder="Badminton, futsal..." />
               </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Price per hour</mat-label>
                 <input matInput type="number" min="1" formControlName="pricePerHour" />
               </mat-form-field>
+
+               <!-- ✅ Amenities (comma-separated input) -->
+                    <mat-form-field appearance="outline">
+                    <mat-label>Amenities</mat-label>
+                    <input matInput formControlName="amenities" placeholder="WiFi, Parking, Washroom..." />
+                   </mat-form-field>
+
+
+  <!-- ✅ About (textarea) -->
+  <mat-form-field appearance="outline" >
+    <mat-label>About</mat-label>
+    <textarea matInput rows="4" formControlName="about" placeholder="Describe your venue..."></textarea>
+  </mat-form-field>
+
               <div class="wide-form-actions">
                 <button mat-flat-button color="primary" type="submit">Publish venue</button>
               </div>
@@ -247,7 +263,10 @@ export class OwnerPageComponent {
     name: ['', Validators.required],
     location: ['', Validators.required],
     sportType: ['', Validators.required],
-    pricePerHour: [1000, [Validators.required, Validators.min(1)]]
+    pricePerHour: [1000, [Validators.required, Validators.min(1)]],
+
+    amenities: [''],   // comma-separated string input
+    about: ['']
   });
 
   constructor() {
@@ -276,10 +295,21 @@ export class OwnerPageComponent {
         name: this.form.controls.name.getRawValue(),
         location: this.form.controls.location.getRawValue(),
         sportType: this.form.controls.sportType.getRawValue(),
-        pricePerHour: Number(this.form.controls.pricePerHour.getRawValue())
+        pricePerHour: Number(this.form.controls.pricePerHour.getRawValue()),
+
+         amenities: this.form.controls.amenities.value
+        ? this.form.controls.amenities.value
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a)
+        : [],
+
+      // ✅ about
+      about: this.form.controls.about.value
       });
       this.message.set('Venue created.');
-      this.form.reset({ name: '', location: '', sportType: '', pricePerHour: 1000 });
+      this.form.reset({ name: '', location: '', sportType: '', pricePerHour: 1000,amenities: '',
+      about: '' });
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'Create failed.');
     }
