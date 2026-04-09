@@ -7,7 +7,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import { placeholderImage } from '../placeholder-images';
+import { heroDefault } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
 @Component({
@@ -18,13 +18,10 @@ import { FairplayStore } from '../services/fairplay-store.service';
       <div class="auth-layout">
         <div class="showcase-panel" [style.background-image]="'url(' + heroImage + ')'">
           <div class="showcase-copy">
-            <span class="inline-label">FairPlay access</span>
+            <span class="a">FairPlay access</span>
             <h1>Sign in to the right role workspace.</h1>
             <p>Players and owners share authentication, but the UI paths stay separate after login.</p>
-            <mat-chip-set>
-              <mat-chip>Player bookings</mat-chip>
-              <mat-chip>Owner dashboard</mat-chip>
-            </mat-chip-set>
+            
           </div>
         </div>
 
@@ -44,9 +41,9 @@ import { FairplayStore } from '../services/fairplay-store.service';
               <input matInput type="password" formControlName="password" />
             </mat-form-field>
             <p class="form-error" *ngIf="message()">{{ message() }}</p>
-            <div class="form-actions">
-            <button mat-flat-button color="primary" type="submit">Login</button>
-            <a mat-button routerLink="/register">Create account</a>
+            <div class="wide-form-actions">
+              <button mat-flat-button color="primary" type="submit">Login</button>
+              <a mat-button routerLink="/register">Create account</a>
             </div>
           </form>
         </div>
@@ -59,7 +56,7 @@ export class LoginPageComponent {
   private readonly store = inject(FairplayStore);
   private readonly router = inject(Router);
 
-  protected readonly heroImage = placeholderImage(1200, 900, 'FairPlay Login');
+  protected readonly heroImage = heroDefault;
   protected readonly message = signal('');
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
