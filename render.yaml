@@ -7,37 +7,16 @@ envVarGroups:
         value: 3600000
 
 services:
-  - type: pserv
-    name: fairplay-eureka
-    runtime: docker
-    rootDir: FairPlay_Backend/fairplay
-    plan: starter
-    dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.eureka
-    dockerContext: ./FairPlay_Backend/fairplay
-    envVars:
-      - key: PORT
-        value: 8761
-
-  - type: pserv
+  - type: web
     name: fairplay-user-service
     runtime: docker
     rootDir: FairPlay_Backend/fairplay
-    plan: starter
+    plan: free
     dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.user-service
     dockerContext: ./FairPlay_Backend/fairplay
     envVars:
-      - key: PORT
-        value: 8081
-      - key: EUREKA_SERVER_HOST
-        fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: host
-      - key: EUREKA_SERVER_PORT
-        fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: port
+      - key: EUREKA_ENABLED
+        value: false
       - key: USER_DB_URL
         sync: false
       - key: USER_DB_USERNAME
@@ -46,26 +25,21 @@ services:
         sync: false
       - fromGroup: fairplay-shared-secrets
 
-  - type: pserv
+  - type: web
     name: fairplay-venue-service
     runtime: docker
     rootDir: FairPlay_Backend/fairplay
-    plan: starter
+    plan: free
     dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.venue-service
     dockerContext: ./FairPlay_Backend/fairplay
     envVars:
-      - key: PORT
-        value: 8082
-      - key: EUREKA_SERVER_HOST
+      - key: EUREKA_ENABLED
+        value: false
+      - key: USER_SERVICE_URL
         fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: host
-      - key: EUREKA_SERVER_PORT
-        fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: port
+          type: web
+          name: fairplay-user-service
+          envVarKey: RENDER_EXTERNAL_URL
       - key: VENUE_DB_URL
         sync: false
       - key: VENUE_DB_USERNAME
@@ -74,44 +48,37 @@ services:
         sync: false
       - fromGroup: fairplay-shared-secrets
 
-  - type: pserv
+  - type: web
     name: fairplay-api-gateway
     runtime: docker
     rootDir: FairPlay_Backend/fairplay
-    plan: starter
+    plan: free
     dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.api-gateway
     dockerContext: ./FairPlay_Backend/fairplay
     envVars:
-      - key: PORT
-        value: 8083
-      - key: EUREKA_SERVER_HOST
+      - key: EUREKA_ENABLED
+        value: false
+      - key: USER_SERVICE_URL
         fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: host
-      - key: EUREKA_SERVER_PORT
+          type: web
+          name: fairplay-user-service
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VENUE_SERVICE_URL
         fromService:
-          type: pserv
-          name: fairplay-eureka
-          property: port
+          type: web
+          name: fairplay-venue-service
+          envVarKey: RENDER_EXTERNAL_URL
 
   - type: web
     name: fairplay-frontend
     runtime: docker
     rootDir: FairPlay_Frontend/fairplay
-    plan: starter
+    plan: free
     dockerfilePath: ./FairPlay_Frontend/fairplay/Dockerfile
     dockerContext: ./FairPlay_Frontend/fairplay
     envVars:
-      - key: PORT
-        value: 10000
-      - key: API_GATEWAY_HOST
+      - key: API_GATEWAY_URL
         fromService:
-          type: pserv
+          type: web
           name: fairplay-api-gateway
-          property: host
-      - key: API_GATEWAY_PORT
-        fromService:
-          type: pserv
-          name: fairplay-api-gateway
-          property: port
+          envVarKey: RENDER_EXTERNAL_URL

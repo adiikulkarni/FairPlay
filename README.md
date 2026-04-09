@@ -194,15 +194,14 @@ npm test
 
 ## Deploying on Render
 
-This repo now includes a root `render.yaml` that provisions:
+The root `render.yaml` is configured for Render's free tier. It provisions:
 
-- `fairplay-eureka` as a private service
-- `fairplay-user-service` as a private service
-- `fairplay-venue-service` as a private service
-- `fairplay-api-gateway` as a private service
-- `fairplay-frontend` as the public web app
+- `fairplay-user-service` as a free web service
+- `fairplay-venue-service` as a free web service
+- `fairplay-api-gateway` as a free web service
+- `fairplay-frontend` as a free web service
 
-The frontend is served by Nginx and proxies `/users`, `/activities`, `/venues`, `/bookings`, and `/owners` to the private API gateway over Render's internal network.
+Local development still uses Eureka. The free Render deploy skips Eureka and wires services together with each service's public `RENDER_EXTERNAL_URL`, because Render does not offer free private services.
 
 Before the first deploy, provide these Render environment variables when prompted:
 
@@ -219,8 +218,14 @@ Deploy flow:
 
 1. Push this repo to GitHub.
 2. In Render, create a new Blueprint and point it at the repo.
-3. Render will read `render.yaml` and create all five services.
+3. Render will read `render.yaml` and create all four services.
 4. Enter the Neon credentials for the `USER_DB_*` and `VENUE_DB_*` variables.
 5. After deploy completes, open the `fairplay-frontend` service URL.
 
-Note: the backend services are configured for Render private networking, so only the frontend is exposed publicly by default.
+Important limits on Render free:
+
+- Each free web service spins down after 15 minutes of idle time and can take about a minute to wake up again.
+- Render grants 750 free instance hours per workspace per calendar month, shared across all free web services.
+- The user service, venue service, and gateway are public web services in this setup because free services cannot receive private-network traffic.
+
+This makes the free deployment suitable for demos and low traffic, not for a reliable production setup. For a smoother deployment on Render, collapse the backend into a single service or move the backend services to paid private instances.
