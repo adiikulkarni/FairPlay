@@ -9,22 +9,22 @@ envVarGroups:
 services:
   - type: pserv
     name: fairplay-eureka
-    runtime: java
+    runtime: docker
     rootDir: FairPlay_Backend/fairplay
     plan: starter
-    buildCommand: ./mvnw -pl eureka-server -am clean package -DskipTests
-    startCommand: java -jar eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.eureka
+    dockerContext: ./FairPlay_Backend/fairplay
     envVars:
       - key: PORT
         value: 8761
 
   - type: pserv
     name: fairplay-user-service
-    runtime: java
+    runtime: docker
     rootDir: FairPlay_Backend/fairplay
     plan: starter
-    buildCommand: ./mvnw -pl user-service -am clean package -DskipTests
-    startCommand: java -jar user-service/target/user-service-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.user-service
+    dockerContext: ./FairPlay_Backend/fairplay
     envVars:
       - key: PORT
         value: 8081
@@ -48,11 +48,11 @@ services:
 
   - type: pserv
     name: fairplay-venue-service
-    runtime: java
+    runtime: docker
     rootDir: FairPlay_Backend/fairplay
     plan: starter
-    buildCommand: ./mvnw -pl venue-service -am clean package -DskipTests
-    startCommand: java -jar venue-service/target/venue-service-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.venue-service
+    dockerContext: ./FairPlay_Backend/fairplay
     envVars:
       - key: PORT
         value: 8082
@@ -76,11 +76,11 @@ services:
 
   - type: pserv
     name: fairplay-api-gateway
-    runtime: java
+    runtime: docker
     rootDir: FairPlay_Backend/fairplay
     plan: starter
-    buildCommand: ./mvnw -pl api-gateway -am clean package -DskipTests
-    startCommand: java -jar api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./FairPlay_Backend/fairplay/Dockerfile.api-gateway
+    dockerContext: ./FairPlay_Backend/fairplay
     envVars:
       - key: PORT
         value: 8083
@@ -100,7 +100,8 @@ services:
     runtime: docker
     rootDir: FairPlay_Frontend/fairplay
     plan: starter
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./FairPlay_Frontend/fairplay/Dockerfile
+    dockerContext: ./FairPlay_Frontend/fairplay
     envVars:
       - key: PORT
         value: 10000
