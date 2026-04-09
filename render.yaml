@@ -1,0 +1,116 @@
+envVarGroups:
+  - name: fairplay-shared-secrets
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: 3600000
+
+services:
+  - type: pserv
+    name: fairplay-eureka
+    runtime: java
+    rootDir: FairPlay_Backend/fairplay
+    plan: starter
+    buildCommand: ./mvnw -pl eureka-server -am clean package -DskipTests
+    startCommand: java -jar eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8761
+
+  - type: pserv
+    name: fairplay-user-service
+    runtime: java
+    rootDir: FairPlay_Backend/fairplay
+    plan: starter
+    buildCommand: ./mvnw -pl user-service -am clean package -DskipTests
+    startCommand: java -jar user-service/target/user-service-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: EUREKA_SERVER_HOST
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: host
+      - key: EUREKA_SERVER_PORT
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: port
+      - key: USER_DB_URL
+        sync: false
+      - key: USER_DB_USERNAME
+        sync: false
+      - key: USER_DB_PASSWORD
+        sync: false
+      - fromGroup: fairplay-shared-secrets
+
+  - type: pserv
+    name: fairplay-venue-service
+    runtime: java
+    rootDir: FairPlay_Backend/fairplay
+    plan: starter
+    buildCommand: ./mvnw -pl venue-service -am clean package -DskipTests
+    startCommand: java -jar venue-service/target/venue-service-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8082
+      - key: EUREKA_SERVER_HOST
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: host
+      - key: EUREKA_SERVER_PORT
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: port
+      - key: VENUE_DB_URL
+        sync: false
+      - key: VENUE_DB_USERNAME
+        sync: false
+      - key: VENUE_DB_PASSWORD
+        sync: false
+      - fromGroup: fairplay-shared-secrets
+
+  - type: pserv
+    name: fairplay-api-gateway
+    runtime: java
+    rootDir: FairPlay_Backend/fairplay
+    plan: starter
+    buildCommand: ./mvnw -pl api-gateway -am clean package -DskipTests
+    startCommand: java -jar api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8083
+      - key: EUREKA_SERVER_HOST
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: host
+      - key: EUREKA_SERVER_PORT
+        fromService:
+          type: pserv
+          name: fairplay-eureka
+          property: port
+
+  - type: web
+    name: fairplay-frontend
+    runtime: docker
+    rootDir: FairPlay_Frontend/fairplay
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: API_GATEWAY_HOST
+        fromService:
+          type: pserv
+          name: fairplay-api-gateway
+          property: host
+      - key: API_GATEWAY_PORT
+        fromService:
+          type: pserv
+          name: fairplay-api-gateway
+          property: port

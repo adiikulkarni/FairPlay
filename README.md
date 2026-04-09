@@ -191,3 +191,36 @@ npm start
 npm run build
 npm test
 ```
+
+## Deploying on Render
+
+This repo now includes a root `render.yaml` that provisions:
+
+- `fairplay-eureka` as a private service
+- `fairplay-user-service` as a private service
+- `fairplay-venue-service` as a private service
+- `fairplay-api-gateway` as a private service
+- `fairplay-frontend` as the public web app
+
+The frontend is served by Nginx and proxies `/users`, `/activities`, `/venues`, `/bookings`, and `/owners` to the private API gateway over Render's internal network.
+
+Before the first deploy, provide these Render environment variables when prompted:
+
+```text
+USER_DB_URL=jdbc:postgresql://<your-neon-host>/<fairplay_user_db>?sslmode=require
+USER_DB_USERNAME=<your-neon-username>
+USER_DB_PASSWORD=<your-neon-password>
+VENUE_DB_URL=jdbc:postgresql://<your-neon-host>/<fairplay_venue_db>?sslmode=require
+VENUE_DB_USERNAME=<your-neon-username>
+VENUE_DB_PASSWORD=<your-neon-password>
+```
+
+Deploy flow:
+
+1. Push this repo to GitHub.
+2. In Render, create a new Blueprint and point it at the repo.
+3. Render will read `render.yaml` and create all five services.
+4. Enter the Neon credentials for the `USER_DB_*` and `VENUE_DB_*` variables.
+5. After deploy completes, open the `fairplay-frontend` service URL.
+
+Note: the backend services are configured for Render private networking, so only the frontend is exposed publicly by default.

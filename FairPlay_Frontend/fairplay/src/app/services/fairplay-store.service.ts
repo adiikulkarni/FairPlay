@@ -282,10 +282,10 @@ export class FairplayStore {
         return error.error.message;
       }
       if (error.status === 404) {
-        return 'Gateway route was not found. Start the gateway on http://localhost:8083 or update the frontend API base.';
+        return 'The requested API route was not found.';
       }
       if (error.status === 0) {
-        return 'Backend is unreachable. Start the gateway and services first.';
+        return 'Backend is unreachable.';
       }
     }
 
@@ -352,10 +352,6 @@ export class FairplayStore {
   }
 
   private resolveApiBase(): string {
-    if (typeof window === 'undefined') {
-      return 'http://localhost:8083';
-    }
-
-    return window.location.port === '4200' ? '' : 'http://localhost:8083';
+    return '';
   }
 }
