@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -31,6 +31,7 @@ export class App {
 
   protected readonly currentUser = this.store.currentUser;
   protected readonly bootstrapError = this.store.bootstrapError;
+  protected readonly mobileNavOpen = signal(false);
   protected readonly navItems = computed(() => {
     const user = this.currentUser();
     if (!user) {
@@ -58,6 +59,14 @@ export class App {
       { label: 'Profile', path: '/profile', exact: false, icon: 'person' }
     ];
   });
+  protected readonly mobileNavItems = computed(() => {
+    const user = this.currentUser();
+    if (!user) {
+      return [{ label: 'Home', path: '/', exact: true, icon: 'home' }];
+    }
+
+    return this.navItems();
+  });
 
   protected readonly sessionLabel = computed(() => {
     const user = this.currentUser();
@@ -65,4 +74,12 @@ export class App {
   });
 
   protected readonly roleLabel = computed(() => (this.currentUser()?.role === 'OWNER' ? 'Owner' : 'Player'));
+
+  protected toggleMobileNav(): void {
+    this.mobileNavOpen.update((isOpen) => !isOpen);
+  }
+
+  protected closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
+  }
 }
