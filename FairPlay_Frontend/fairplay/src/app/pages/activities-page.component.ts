@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -73,7 +73,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
         <div class="media-banner" [style.background-image]="'linear-gradient(180deg, rgba(0, 109, 57, 0.08), rgba(12, 31, 24, 0.12)), url(' + heroImage() + ')'">
           <div class="media-banner-copy muted-grid">
             <mat-chip-set>
-              <mat-chip>{{ activities().length }} live</mat-chip>
+              <mat-chip>{{ upcomingActivities().length }} live</mat-chip>
               <mat-chip *ngIf="nextActivity() as next">Next: {{ next.time | date: 'short' }}</mat-chip>
             </mat-chip-set>
             <strong>{{ nextActivityTitle() }}</strong>
@@ -102,14 +102,14 @@ import { FairplayStore } from '../services/fairplay-store.service';
           </div>
           <div class="actions">
             <mat-chip-set>
-              <mat-chip>{{ activities().length }} available</mat-chip>
+              <mat-chip>{{ upcomingActivities().length }} available</mat-chip>
             </mat-chip-set>
             <button mat-stroked-button type="button" (click)="refresh()">Refresh</button>
           </div>
         </div>
 
         <section class="activity-grid">
-          @for (activity of activities(); track activity.id) {
+          @for (activity of upcomingActivities(); track activity.id) {
             <mat-card class="activity-card">
               <div class="card-media">
                 <img [src]="activityImage(activity.sportType)" [alt]="activity.sportType" />
@@ -148,7 +148,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
             </mat-card>
           } @empty {
             <div class="empty-state">
-              <p>No activities available right now.</p>
+              <p>No upcoming activities available right now.</p>
             </div>
           }
         </section>
@@ -159,10 +159,12 @@ import { FairplayStore } from '../services/fairplay-store.service';
 export class ActivitiesPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly store = inject(FairplayStore);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly activities = this.store.activities;
   protected readonly currentUser = this.store.currentUser;
   protected readonly message = signal('');
+  protected readonly now = signal(new Date());
 
   protected readonly form = this.fb.group({
     sportType: this.fb.nonNullable.control('', Validators.required),
@@ -171,19 +173,23 @@ export class ActivitiesPageComponent {
     activityTime: new FormControl<Date | null>(null, Validators.required)
   });
 
+  protected readonly upcomingActivities = computed(() => {
+    const now = this.now().getTime();
+    return this.activities()
+      .filter((activity) => this.activityTimestamp(activity) > now)
+      .sort((a, b) => this.activityTimestamp(a) - this.activityTimestamp(b));
+  });
+
   protected readonly nextActivity = computed<Activity | null>(() => {
-    const sorted = [...this.activities()].sort(
-      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
-    );
-    return sorted[0] ?? null;
+    return this.upcomingActivities()[0] ?? null;
   });
 
   protected readonly heroImage = computed(() => '/sports-tools.jpg');
 
   protected readonly heroSummary = computed(() => {
-    const activities = this.activities();
+    const activities = this.upcomingActivities();
     if (!activities.length) {
-      return 'Host a game or refresh to load the community feed.';
+      return 'No upcoming games right now. Host a match or refresh to load the next one.';
     }
     const locations = this.uniqueCount(activities.map((a) => a.location));
     const sports = this.uniqueCount(activities.map((a) => a.sportType));
@@ -201,7 +207,7 @@ export class ActivitiesPageComponent {
   });
 
   protected readonly statsCards = computed(() => {
-    const activities = this.activities();
+    const activities = this.upcomingActivities();
     const participantTotal = activities.reduce((sum, activity) => sum + (activity.participantCount ?? 0), 0);
     const sports = this.uniqueCount(activities.map((a) => a.sportType));
     const locations = this.uniqueCount(activities.map((a) => a.location));
@@ -217,6 +223,11 @@ export class ActivitiesPageComponent {
       }
     ];
   });
+
+  constructor() {
+    const timerId = window.setInterval(() => this.now.set(new Date()), 60_000);
+    this.destroyRef.onDestroy(() => window.clearInterval(timerId));
+  }
 
   protected async refresh(): Promise<void> {
     try {
@@ -279,7 +290,7 @@ export class ActivitiesPageComponent {
     if (!user) {
       return false;
     }
-    return !this.isHost(activity) && !this.isParticipant(activity);
+    return this.activityTimestamp(activity) > this.now().getTime() && !this.isHost(activity) && !this.isParticipant(activity);
   }
 
   protected isHost(activity: Activity): boolean {
@@ -305,6 +316,10 @@ export class ActivitiesPageComponent {
 
   private uniqueCount(values: string[]): number {
     return new Set(values.filter(Boolean).map((value) => value.trim().toLowerCase())).size;
+  }
+
+  private activityTimestamp(activity: Activity): number {
+    return new Date(activity.time).getTime();
   }
 
   private formatTime(value: string): string {
