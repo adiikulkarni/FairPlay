@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping
@@ -58,6 +59,13 @@ public class VenueController {
                                      @PathVariable Long venueId,
                                      @Valid @RequestBody VenueUpdateRequest request) {
         return venueManagementService.updateVenue(venueId, currentUser.id(), request);
+    }
+
+    @DeleteMapping("/venues/{venueId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteVenue(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                            @PathVariable Long venueId) {
+        venueManagementService.deleteVenue(venueId, currentUser.id());
     }
 
     @GetMapping("/owners/{ownerId}/dashboard")

@@ -51,6 +51,7 @@ export class FairplayStore {
       void this.refreshCurrentUser().catch(() => this.logout());
       void this.loadBookings(user.id).catch(() => undefined);
       void this.loadOwnerVenues().catch(() => undefined);
+      void this.loadOwnerBookings().catch(() => undefined);
       void this.loadOwnerDashboardIfNeeded().catch(() => undefined);
     }
   }
@@ -199,6 +200,24 @@ export class FairplayStore {
     await this.loadOwnerDashboardIfNeeded();
   }
 
+  async updateVenue(venueId: number, payload: { name: string; location: string; sportType: string; pricePerHour: number; amenities: string[]; about: string; }): Promise<void> {
+    this.requireOwner();
+    await this.request(() => this.http.put<Venue>(this.url(`/venues/${venueId}`), payload));
+    await this.loadOwnerVenues();
+    await this.loadVenues();
+    await this.loadOwnerBookings();
+    await this.loadOwnerDashboardIfNeeded();
+  }
+
+  async deleteVenue(venueId: number): Promise<void> {
+    this.requireOwner();
+    await this.request(() => this.http.delete<void>(this.url(`/venues/${venueId}`)));
+    await this.loadOwnerVenues();
+    await this.loadVenues();
+    await this.loadOwnerBookings();
+    await this.loadOwnerDashboardIfNeeded();
+  }
+
   async loadOwnerDashboardIfNeeded(): Promise<void> {
     const user = this.currentUser();
     if (!user || user.role !== 'OWNER') {
@@ -225,6 +244,7 @@ export class FairplayStore {
    const currentUser = this.requireUser();
    await this.loadBookings(currentUser.id);
    await this.loadOwnerVenues();
+   await this.loadOwnerBookings();
    await this.loadOwnerDashboardIfNeeded();
   }
 

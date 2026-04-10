@@ -73,13 +73,13 @@ import { FairplayStore } from '../services/fairplay-store.service';
       <section class="section-card">
         <div class="section-header">
           <div class="muted-grid">
-            <h2>Featured venues</h2>
-            <p>Venue cards pull live pricing and sport labels from the backend.</p>
+            <h2>{{ venueSectionTitle() }}</h2>
+            <p>{{ venueSectionCopy() }}</p>
           </div>
         </div>
 
         <div class="tile-grid">
-          @for (venue of featuredVenues(); track venue.id) {
+          @for (venue of dashboardVenues(); track venue.id) {
             <mat-card class="venue-card">
               <div class="card-media">
                 <img [src]="venueImage(venue.sportType)" [alt]="venue.name" />
@@ -93,12 +93,12 @@ import { FairplayStore } from '../services/fairplay-store.service';
                     <mat-chip>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hr</mat-chip>
                   </mat-chip-set>
                 </div>
-                <a mat-flat-button color="primary" routerLink="/venues">Open venue</a>
+                <a mat-flat-button color="primary" [routerLink]="venueActionLink()">{{ venueActionLabel() }}</a>
               </div>
             </mat-card>
           } @empty {
             <div class="empty-state">
-              <p>No venues have loaded yet. Start the backend and refresh to see live cards.</p>
+              <p>{{ venueEmptyState() }}</p>
             </div>
           }
         </div>
@@ -123,6 +123,8 @@ export class DashboardPageComponent {
   private readonly store = inject(FairplayStore);
 
   protected readonly currentUser = this.store.currentUser;
+  protected readonly ownerVenues = this.store.ownerVenues;
+  protected readonly ownerBookings = this.store.ownerBookings;
 
   protected readonly stats = computed(() => {
     const user = this.currentUser();
@@ -141,7 +143,7 @@ export class DashboardPageComponent {
       },
       {
         label: user?.role === 'OWNER' ? 'Managed Bookings' : 'Your Bookings',
-        value: String(this.store.bookings().length),
+        value: String(user?.role === 'OWNER' ? this.ownerBookings().length : this.store.bookings().length),
         icon: 'confirmation_number',
         caption:
           user?.role === 'OWNER' ? 'Owner dashboard reservations' : 'Personal booking history',
@@ -167,7 +169,35 @@ export class DashboardPageComponent {
     return base;
   });
 
-  protected readonly featuredVenues = computed(() => this.store.venues().slice(0, 3));
+  protected readonly dashboardVenues = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? this.ownerVenues().slice(0, 3)
+      : this.store.venues().slice(0, 3),
+  );
+
+  protected readonly venueSectionTitle = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? 'Your venues' : 'Featured venues',
+  );
+
+  protected readonly venueSectionCopy = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? 'These are the venues currently published under your owner account.'
+      : 'Venue cards pull live pricing and sport labels from the backend.',
+  );
+
+  protected readonly venueActionLabel = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? 'Manage venue' : 'Open venue',
+  );
+
+  protected readonly venueActionLink = computed(() =>
+    this.currentUser()?.role === 'OWNER' ? '/owner' : '/venues',
+  );
+
+  protected readonly venueEmptyState = computed(() =>
+    this.currentUser()?.role === 'OWNER'
+      ? 'You have not published any venues yet. Open the owner dashboard to add one.'
+      : 'No venues have loaded yet. Start the backend and refresh to see live cards.',
+  );
 
   protected readonly quickLinks = computed(() => {
     const user = this.currentUser();

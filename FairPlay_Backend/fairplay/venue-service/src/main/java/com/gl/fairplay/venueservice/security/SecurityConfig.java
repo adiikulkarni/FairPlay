@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/venues").permitAll()
                         .requestMatchers(HttpMethod.POST, "/venues").hasRole("OWNER")
                         .requestMatchers(HttpMethod.PUT, "/venues/**").hasRole("OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/venues/**").hasRole("OWNER")
                         .requestMatchers(HttpMethod.GET, "/owners/**").hasRole("OWNER")
                         .requestMatchers("/bookings/**").authenticated()
                         .anyRequest().authenticated())

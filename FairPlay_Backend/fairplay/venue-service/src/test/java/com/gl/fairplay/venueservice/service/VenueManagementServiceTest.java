@@ -2,6 +2,7 @@ package com.gl.fairplay.venueservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.gl.fairplay.venueservice.common.BusinessValidationException;
@@ -102,5 +103,27 @@ class VenueManagementServiceTest {
         assertThat(response).hasSize(1);
         assertThat(response.get(0).name()).isEqualTo("Smash Arena");
         assertThat(response.get(0).ownerId()).isEqualTo(1L);
+    }
+
+    @Test
+    void deleteVenueRejectsWhenBookingsExist() {
+        when(venueRepository.findById(10L)).thenReturn(java.util.Optional.of(
+                Venue.builder().id(10L).ownerId(1L).name("Smash Arena").build()));
+        when(bookingRepository.existsByVenueId(10L)).thenReturn(true);
+
+        assertThatThrownBy(() -> venueManagementService.deleteVenue(10L, 1L))
+                .isInstanceOf(BusinessValidationException.class)
+                .hasMessage("Cannot delete a venue that already has bookings");
+    }
+
+    @Test
+    void deleteVenueDeletesOwnerVenueWithoutBookings() {
+        Venue venue = Venue.builder().id(10L).ownerId(1L).name("Smash Arena").build();
+        when(venueRepository.findById(10L)).thenReturn(java.util.Optional.of(venue));
+        when(bookingRepository.existsByVenueId(10L)).thenReturn(false);
+
+        venueManagementService.deleteVenue(10L, 1L);
+
+        verify(venueRepository).delete(venue);
     }
 }

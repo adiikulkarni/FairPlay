@@ -2,6 +2,7 @@ package com.gl.fairplay.venueservice.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.gl.fairplay.venueservice.common.BusinessValidationException;
@@ -59,5 +60,14 @@ class VenueControllerTest {
         var response = venueController.getOwnerVenues(currentUser, 1L);
 
         assertThat(response).isEqualTo(venues);
+    }
+
+    @Test
+    void deleteVenueDelegatesToService() {
+        var currentUser = new AuthenticatedUser(1L, "owner@example.com", Role.OWNER);
+
+        venueController.deleteVenue(currentUser, 10L);
+
+        verify(venueManagementService).deleteVenue(10L, 1L);
     }
 }

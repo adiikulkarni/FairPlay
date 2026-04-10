@@ -168,6 +168,21 @@ public class VenueManagementService {
                 .toList();
     }
 
+    @Transactional
+    public void deleteVenue(Long venueId, Long currentOwnerId) {
+        Venue venue = getVenueEntity(venueId);
+
+        if (!venue.getOwnerId().equals(currentOwnerId)) {
+            throw new BusinessValidationException("You can delete only your own venues");
+        }
+
+        if (bookingRepository.existsByVenueId(venueId)) {
+            throw new BusinessValidationException("Cannot delete a venue that already has bookings");
+        }
+
+        venueRepository.delete(venue);
+    }
+
     private String normalize(String value) {
         if (value == null || value.isBlank()) {
             return null;
