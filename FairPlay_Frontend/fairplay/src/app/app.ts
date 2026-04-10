@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { SportsLoaderComponent } from './components/sports-loader.component';
 import { FairplayStore } from './services/fairplay-store.service';
 
 @Component({
@@ -19,7 +20,8 @@ import { FairplayStore } from './services/fairplay-store.service';
     MatButtonModule,
     MatChipsModule,
     MatIconModule,
-    MatToolbarModule
+    MatToolbarModule,
+    SportsLoaderComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
@@ -29,6 +31,7 @@ export class App {
 
   protected readonly currentUser = this.store.currentUser;
   protected readonly bootstrapError = this.store.bootstrapError;
+  protected readonly mobileNavOpen = signal(false);
   protected readonly navItems = computed(() => {
     const user = this.currentUser();
     if (!user) {
@@ -56,6 +59,14 @@ export class App {
       { label: 'Profile', path: '/profile', exact: false, icon: 'person' }
     ];
   });
+  protected readonly mobileNavItems = computed(() => {
+    const user = this.currentUser();
+    if (!user) {
+      return [{ label: 'Home', path: '/', exact: true, icon: 'home' }];
+    }
+
+    return this.navItems();
+  });
 
   protected readonly sessionLabel = computed(() => {
     const user = this.currentUser();
@@ -63,4 +74,12 @@ export class App {
   });
 
   protected readonly roleLabel = computed(() => (this.currentUser()?.role === 'OWNER' ? 'Owner' : 'Player'));
+
+  protected toggleMobileNav(): void {
+    this.mobileNavOpen.update((isOpen) => !isOpen);
+  }
+
+  protected closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
+  }
 }

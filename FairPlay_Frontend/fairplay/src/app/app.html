@@ -1,14 +1,16 @@
 <div class="app-shell">
+  <app-sports-loader />
+
   <mat-toolbar class="topbar">
-    <a class="brand" routerLink="/">
-      <span><img 
-        src="logo.png" 
-        alt="FairPlay Logo" 
+    <a class="brand" routerLink="/" (click)="closeMobileNav()">
+      <span><img
+        src="logo.png"
+        alt="FairPlay Logo"
         class="brand-logo"
       /></span>
     </a>
 
-    <nav class="main-nav">
+    <nav class="main-nav desktop-nav">
       @for (item of navItems(); track item.label) {
         <a
           class="nav-link"
@@ -38,17 +40,82 @@
     </div>
 
     <ng-template #userActions>
-      <mat-chip-set aria-label="Current role">
-        <mat-chip class="role-chip">{{ roleLabel() }}</mat-chip>
-      </mat-chip-set>
-      <a class="icon-btn" routerLink="/profile" aria-label="Profile">
-        <mat-icon>account_circle</mat-icon>
-      </a>
-      <a class="icon-btn" routerLink="/logout" aria-label="Logout">
-        <mat-icon>logout</mat-icon>
-      </a>
+      <div class="desktop-user-actions">
+        <mat-chip-set aria-label="Current role">
+          <mat-chip class="role-chip">{{ roleLabel() }}</mat-chip>
+        </mat-chip-set>
+        <a class="icon-btn" routerLink="/profile" aria-label="Profile">
+          <mat-icon>account_circle</mat-icon>
+        </a>
+        <a class="icon-btn" routerLink="/logout" aria-label="Logout">
+          <mat-icon>logout</mat-icon>
+        </a>
+      </div>
     </ng-template>
+
+    <button
+      type="button"
+      mat-icon-button
+      class="mobile-menu-toggle"
+      aria-label="Toggle navigation menu"
+      [attr.aria-expanded]="mobileNavOpen()"
+      (click)="toggleMobileNav()"
+    >
+      <mat-icon>{{ mobileNavOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
   </mat-toolbar>
+
+  @if (mobileNavOpen()) {
+    <section class="mobile-menu" aria-label="Mobile navigation panel">
+      @if (currentUser()) {
+        <div class="mobile-session-card">
+          <div class="mobile-session-icon">
+            <mat-icon>{{ currentUser()!.role === 'OWNER' ? 'storefront' : 'sports_soccer' }}</mat-icon>
+          </div>
+          <div class="mobile-session-copy">
+            <strong>{{ currentUser()!.name }}</strong>
+            <span>{{ roleLabel() }} workspace</span>
+          </div>
+        </div>
+      }
+
+      <nav class="mobile-nav">
+        @for (item of mobileNavItems(); track item.label) {
+          <a
+            class="mobile-nav-link"
+            [routerLink]="item.path"
+            routerLinkActive="mobile-active-link"
+            [routerLinkActiveOptions]="{ exact: item.exact }"
+            (click)="closeMobileNav()"
+          >
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+
+      @if (!currentUser()) {
+        <div class="mobile-action-row">
+          <a class="mobile-action-link secondary" routerLink="/login" (click)="closeMobileNav()">
+            <mat-icon>login</mat-icon>
+            <span>Login</span>
+          </a>
+          <a class="mobile-action-link primary" routerLink="/register" (click)="closeMobileNav()">
+            <mat-icon>person_add</mat-icon>
+            <span>Create account</span>
+          </a>
+        </div>
+      } @else {
+        <div class="mobile-action-row mobile-action-row-auth">
+          <div class="mobile-role-pill">{{ roleLabel() }}</div>
+          <a class="mobile-action-link secondary" routerLink="/logout" (click)="closeMobileNav()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </a>
+        </div>
+      }
+    </section>
+  }
 
   <div class="alert-bar" *ngIf="bootstrapError()">
     {{ bootstrapError() }}
@@ -94,7 +161,7 @@
           <mat-icon inline>mail</mat-icon>
           Aditya Kulkarni 😎
           </p>
-          
+
         </a>
 
         <a
@@ -106,7 +173,7 @@
           <mat-icon inline>mail</mat-icon>
           Vaishvi Parikh 😁
           </p>
-          
+
         </a>
 
         <a
@@ -118,10 +185,10 @@
           <mat-icon inline>mail</mat-icon>
           Gaurang Bharuka 👾
           </p>
-          
+
         </a>
 
-        
+
         <a
           href="mailto:alwin.shaji@globallogic.com"
           target="_blank"
@@ -131,10 +198,10 @@
           <mat-icon inline>mail</mat-icon>
           Alwin Shaji 😉
           </p>
-          
+
         </a>
 
-        
+
         <a
           href="mailto:anukul.gupta@globallogic.com"
           target="_blank"
@@ -142,11 +209,11 @@
         >
           <p>
           <mat-icon inline>mail</mat-icon>
-          Anukul Gupta 💩
+          Anukul Gupta 🙌
           </p>
-          
+
         </a>
-        
+
         <a
           href="mailto:gauri.prabhune@globallogic.com"
           target="_blank"
@@ -156,7 +223,7 @@
           <mat-icon inline>mail</mat-icon>
           Gauri Prabhune 👩‍🎓
           </p>
-          
+
         </a>
         </div>
 

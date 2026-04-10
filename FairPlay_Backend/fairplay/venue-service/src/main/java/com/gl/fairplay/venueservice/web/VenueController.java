@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 @RequestMapping
@@ -31,6 +32,11 @@ public class VenueController {
 
     private final VenueManagementService venueManagementService;
     private final BookingManagementService bookingManagementService;
+
+    @GetMapping("/venues/ping")
+    public String ping() {
+        return "Active " + java.time.Instant.now().toString();
+    }
 
     @PostMapping("/venues")
     @ResponseStatus(HttpStatus.CREATED)
@@ -55,6 +61,13 @@ public class VenueController {
         return venueManagementService.updateVenue(venueId, currentUser.id(), request);
     }
 
+    @DeleteMapping("/venues/{venueId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteVenue(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                            @PathVariable Long venueId) {
+        venueManagementService.deleteVenue(venueId, currentUser.id());
+    }
+
     @GetMapping("/owners/{ownerId}/dashboard")
     public OwnerDashboardResponse getOwnerDashboard(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                                     @PathVariable Long ownerId) {
@@ -71,5 +84,14 @@ public class VenueController {
             throw new BusinessValidationException("Owner id must match authenticated user");
         }
         return bookingManagementService.getBookingsForOwner(ownerId);
+    }
+
+    @GetMapping("/owners/{ownerId}/venues")
+    public List<VenueResponse> getOwnerVenues(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                              @PathVariable Long ownerId) {
+        if (!currentUser.id().equals(ownerId)) {
+            throw new BusinessValidationException("Owner id must match authenticated user");
+        }
+        return venueManagementService.getVenueResponsesForOwner(ownerId);
     }
 }

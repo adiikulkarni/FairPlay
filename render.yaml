@@ -1,0 +1,84 @@
+envVarGroups:
+  - name: fairplay-shared-secrets
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: 3600000
+
+services:
+  - type: web
+    name: fairplay-user-service
+    runtime: docker
+    rootDir: FairPlay_Backend/fairplay
+    plan: free
+    dockerfilePath: ./Dockerfile.user-service
+    dockerContext: .
+    envVars:
+      - key: EUREKA_ENABLED
+        value: false
+      - key: USER_DB_URL
+        sync: false
+      - key: USER_DB_USERNAME
+        sync: false
+      - key: USER_DB_PASSWORD
+        sync: false
+      - fromGroup: fairplay-shared-secrets
+
+  - type: web
+    name: fairplay-venue-service
+    runtime: docker
+    rootDir: FairPlay_Backend/fairplay
+    plan: free
+    dockerfilePath: ./Dockerfile.venue-service
+    dockerContext: .
+    envVars:
+      - key: EUREKA_ENABLED
+        value: false
+      - key: USER_SERVICE_URL
+        fromService:
+          type: web
+          name: fairplay-user-service
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VENUE_DB_URL
+        sync: false
+      - key: VENUE_DB_USERNAME
+        sync: false
+      - key: VENUE_DB_PASSWORD
+        sync: false
+      - fromGroup: fairplay-shared-secrets
+
+  - type: web
+    name: fairplay-api-gateway
+    runtime: docker
+    rootDir: FairPlay_Backend/fairplay
+    plan: free
+    dockerfilePath: ./Dockerfile.api-gateway
+    dockerContext: .
+    envVars:
+      - key: EUREKA_ENABLED
+        value: false
+      - key: USER_SERVICE_URL
+        fromService:
+          type: web
+          name: fairplay-user-service
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VENUE_SERVICE_URL
+        fromService:
+          type: web
+          name: fairplay-venue-service
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: fairplay-frontend
+    runtime: docker
+    rootDir: FairPlay_Frontend/fairplay
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: API_GATEWAY_URL
+        fromService:
+          type: web
+          name: fairplay-api-gateway
+          envVarKey: RENDER_EXTERNAL_URL

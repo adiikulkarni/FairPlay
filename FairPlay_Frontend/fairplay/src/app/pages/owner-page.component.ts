@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Venue } from '../models';
 import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
@@ -35,16 +36,19 @@ import { FairplayStore } from '../services/fairplay-store.service';
             <div>
               <span class="inline-label">Owner dashboard</span>
               <h1>Manage venues without mixing player flows.</h1>
-<!--              <p>Owner actions stay in one dedicated workspace for metrics, publishing, and revenue visibility.</p>-->
             </div>
           </div>
 
           <div class="actions">
             <button mat-flat-button color="primary" type="button" (click)="refresh()">Refresh metrics</button>
-            <button mat-stroked-button type="button" (click)="createVenue()">Publish venue</button>
+            <button mat-stroked-button type="button" (click)="saveVenue()">
+              {{ isEditingVenue() ? 'Save changes' : 'Publish venue' }}
+            </button>
           </div>
 
-          <div class="surface-note">Owner role UI is intentionally separate from the player booking and activities screens.</div>
+          <div class="surface-note">
+            Owner role UI is intentionally separate from the player booking and activities screens.
+          </div>
         </div>
 
         <div class="media-banner">
@@ -54,7 +58,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
               <mat-chip>Owner role</mat-chip>
             </mat-chip-set>
             <strong>Owner workspace</strong>
-            <p>Metrics, bookings, and venue publishing stay within this dashboard.</p>
+            <p>Metrics, bookings, venue publishing, and venue management stay within this dashboard.</p>
           </div>
         </div>
       </section>
@@ -103,16 +107,23 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <section class="section-card">
             <div class="section-header">
               <div class="muted-grid">
-                <h2>Create venue</h2>
-                <p>Material form controls now provide a cleaner publishing flow.</p>
+                <h2>{{ isEditingVenue() ? 'Update venue' : 'Create venue' }}</h2>
+                <p>
+                  {{
+                    isEditingVenue()
+                      ? 'Adjust pricing, amenities, and venue details from one form.'
+                      : 'Material form controls provide a cleaner publishing flow.'
+                  }}
+                </p>
               </div>
             </div>
 
-            <form [formGroup]="form" (ngSubmit)="createVenue()" class="form-grid-two">
+            <form [formGroup]="form" (ngSubmit)="saveVenue()" class="form-grid-two">
               <mat-form-field appearance="outline">
                 <mat-label>Venue name</mat-label>
                 <input matInput formControlName="name" placeholder="Arena or court name" />
               </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Location</mat-label>
                 <input matInput formControlName="location" placeholder="City or district" />
@@ -128,28 +139,76 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 <input matInput type="number" min="1" formControlName="pricePerHour" />
               </mat-form-field>
 
-               <!-- ✅ Amenities (comma-separated input) -->
-                    <mat-form-field appearance="outline">
-                    <mat-label>Amenities</mat-label>
-                    <input matInput formControlName="amenities" placeholder="WiFi, Parking, Washroom..." />
-                   </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Amenities</mat-label>
+                <input matInput formControlName="amenities" placeholder="WiFi, Parking, Washroom..." />
+              </mat-form-field>
 
-
-  <!-- ✅ About (textarea) -->
-  <mat-form-field appearance="outline" >
-    <mat-label>About</mat-label>
-    <textarea matInput rows="4" formControlName="about" placeholder="Describe your venue..."></textarea>
-  </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>About</mat-label>
+                <textarea matInput rows="4" formControlName="about" placeholder="Describe your venue..."></textarea>
+              </mat-form-field>
 
               <div class="wide-form-actions">
-                <button mat-flat-button color="primary" type="submit">Publish venue</button>
+                <button mat-flat-button color="primary" type="submit">
+                  {{ isEditingVenue() ? 'Update venue' : 'Publish venue' }}
+                </button>
+                <button mat-stroked-button type="button" *ngIf="isEditingVenue()" (click)="cancelEditing()">
+                  Cancel edit
+                </button>
               </div>
             </form>
+
             <p class="form-error" *ngIf="message()">{{ message() }}</p>
           </section>
         </div>
 
         <div class="page-grid">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
+                <h2>Published venues</h2>
+                <p>Your owner-only venue inventory comes from the dedicated owner endpoint.</p>
+              </div>
+              <mat-chip-set>
+                <mat-chip>{{ ownerVenues().length }} venues</mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <div class="centered" *ngIf="loadingOwnerVenues()">
+              <mat-spinner diameter="36"></mat-spinner>
+            </div>
+
+            <div class="table-list" *ngIf="!loadingOwnerVenues()">
+              @for (venue of ownerVenues(); track venue.id) {
+                <div class="table-row">
+                  <div class="muted-grid">
+                    <strong>{{ venue.name }}</strong>
+                    <p>{{ venue.location }}</p>
+                    <p>{{ venue.about || 'No description added yet.' }}</p>
+                  </div>
+
+                  <div class="muted-grid">
+                    <mat-chip-set>
+                      <mat-chip>{{ venue.sportType }}</mat-chip>
+                      <mat-chip>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hr</mat-chip>
+                    </mat-chip-set>
+                    <p>{{ amenitiesLabel(venue) }}</p>
+                  </div>
+
+                  <div class="actions">
+                    <button mat-button type="button" (click)="startEditingVenue(venue)">Edit</button>
+                    <button mat-button type="button" (click)="deleteVenue(venue)">Delete</button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state">
+                  <p>No venues published yet. Use the form to add your first venue.</p>
+                </div>
+              }
+            </div>
+          </section>
+
           <section class="section-card">
             <div class="section-header">
               <div class="muted-grid">
@@ -170,9 +229,10 @@ import { FairplayStore } from '../services/fairplay-store.service';
                 <div class="table-row">
                   <div class="muted-grid">
                     <strong>{{ booking.venueName ?? venueNameFor(booking.venueId) }}</strong>
-                    <p>{{ booking.slotTime | date: 'medium' }} → {{ bookingEndTime(booking) }}</p>
+                    <p>{{ booking.slotTime | date: 'medium' }} -> {{ bookingEndTime(booking) }}</p>
                     <p>Duration: {{ booking.durationHours }} hr</p>
                   </div>
+
                   <div class="muted-grid">
                     <mat-chip-set>
                       <mat-chip class="status-chip" [ngClass]="{ cancelled: booking.status === 'CANCELLED' }">
@@ -181,6 +241,7 @@ import { FairplayStore } from '../services/fairplay-store.service';
                     </mat-chip-set>
                     <p>Rs {{ booking.totalPrice | number: '1.0-0' }}</p>
                   </div>
+
                   <div class="muted-grid">
                     <strong>{{ booking.bookedBy?.name ?? 'User #' + booking.userId }}</strong>
                     <p>{{ booking.bookedBy?.email ?? 'Email not provided' }}</p>
@@ -215,14 +276,24 @@ export class OwnerPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly store = inject(FairplayStore);
   private readonly datePipe = inject(DatePipe);
+  private readonly defaultFormValue = {
+    name: '',
+    location: '',
+    sportType: '',
+    pricePerHour: 1000,
+    amenities: '',
+    about: ''
+  };
 
   protected readonly message = signal('');
+  protected readonly editingVenueId = signal<number | null>(null);
+  protected readonly isEditingVenue = computed(() => this.editingVenueId() !== null);
   protected readonly heroImage = sportPlaceholder('Owner Workspace', 1200, 800);
   protected readonly ownerNotes = [
     { title: 'Revenue visibility', caption: 'Owner earnings remain visible only in the owner workspace.', icon: 'payments' },
     { title: 'Role separation', caption: 'Player booking screens and owner management are visually distinct.', icon: 'account_tree' },
     { title: 'Player context', caption: 'Booking rows surface player contact details when available.', icon: 'perm_contact_calendar' },
-    { title: 'Fast publishing', caption: 'The create venue form is cleaner and consistent.', icon: 'publish' }
+    { title: 'Fast publishing', caption: 'The create and edit form is cleaner and consistent.', icon: 'publish' }
   ];
 
   protected readonly stats = computed(() => {
@@ -264,12 +335,17 @@ export class OwnerPageComponent {
     location: ['', Validators.required],
     sportType: ['', Validators.required],
     pricePerHour: [1000, [Validators.required, Validators.min(1)]],
-
-    amenities: [''],   // comma-separated string input
+    amenities: [''],
     about: ['']
   });
 
+  protected ownerBookings = this.store.ownerBookings;
+  protected ownerVenues = this.store.ownerVenues;
+  protected loadingOwnerBookings = this.store.loadingOwnerBookings;
+  protected loadingOwnerVenues = this.store.loadingOwnerVenues;
+
   constructor() {
+    void this.store.loadOwnerVenues().catch(() => undefined);
     void this.store.loadOwnerDashboardIfNeeded().catch(() => undefined);
     void this.store.loadOwnerBookings().catch(() => undefined);
     void this.store.loadVenues().catch(() => undefined);
@@ -277,6 +353,7 @@ export class OwnerPageComponent {
 
   protected async refresh(): Promise<void> {
     try {
+      await this.store.loadOwnerVenues();
       await this.store.loadOwnerDashboardIfNeeded();
       await this.store.loadOwnerBookings();
       this.message.set('');
@@ -285,41 +362,71 @@ export class OwnerPageComponent {
     }
   }
 
-  protected async createVenue(): Promise<void> {
+  protected async saveVenue(): Promise<void> {
     if (this.form.invalid) {
       this.message.set('Fill all venue fields.');
       return;
     }
+
     try {
-      await this.store.createVenue({
-        name: this.form.controls.name.getRawValue(),
-        location: this.form.controls.location.getRawValue(),
-        sportType: this.form.controls.sportType.getRawValue(),
-        pricePerHour: Number(this.form.controls.pricePerHour.getRawValue()),
+      const venueId = this.editingVenueId();
+      const payload = this.readVenuePayload();
 
-         amenities: this.form.controls.amenities.value
-        ? this.form.controls.amenities.value
-            .split(',')
-            .map(a => a.trim())
-            .filter(a => a)
-        : [],
+      if (venueId === null) {
+        await this.store.createVenue(payload);
+        this.message.set('Venue created.');
+      } else {
+        await this.store.updateVenue(venueId, payload);
+        this.message.set('Venue updated.');
+      }
 
-      // ✅ about
-      about: this.form.controls.about.value
-      });
-      this.message.set('Venue created.');
-      this.form.reset({ name: '', location: '', sportType: '', pricePerHour: 1000,amenities: '',
-      about: '' });
+      this.cancelEditing(false);
     } catch (error) {
-      this.message.set(error instanceof Error ? error.message : 'Create failed.');
+      this.message.set(error instanceof Error ? error.message : 'Save failed.');
     }
   }
 
-  protected ownerBookings = this.store.ownerBookings;
-  protected loadingOwnerBookings = this.store.loadingOwnerBookings;
+  protected startEditingVenue(venue: Venue): void {
+    this.editingVenueId.set(venue.id);
+    this.form.reset({
+      name: venue.name,
+      location: venue.location,
+      sportType: venue.sportType,
+      pricePerHour: Number(venue.pricePerHour),
+      amenities: venue.amenities?.join(', ') ?? '',
+      about: venue.about ?? ''
+    });
+    this.message.set('');
+  }
+
+  protected cancelEditing(clearMessage = true): void {
+    this.editingVenueId.set(null);
+    this.form.reset(this.defaultFormValue);
+    if (clearMessage) {
+      this.message.set('');
+    }
+  }
+
+  protected async deleteVenue(venue: Venue): Promise<void> {
+    if (!window.confirm(`Delete "${venue.name}"? This is allowed only when the venue has no bookings.`)) {
+      return;
+    }
+
+    try {
+      await this.store.deleteVenue(venue.id);
+      if (this.editingVenueId() === venue.id) {
+        this.cancelEditing(false);
+      }
+      this.message.set('Venue deleted.');
+    } catch (error) {
+      this.message.set(error instanceof Error ? error.message : 'Delete failed.');
+    }
+  }
 
   protected venueNameFor(venueId: number): string {
-    return this.store.venues().find((v) => v.id === venueId)?.name ?? `Venue #${venueId}`;
+    return this.store.ownerVenues().find((venue) => venue.id === venueId)?.name
+      ?? this.store.venues().find((venue) => venue.id === venueId)?.name
+      ?? `Venue #${venueId}`;
   }
 
   protected bookingEndTime = (booking: { slotTime: string; durationHours: number }): string => {
@@ -329,4 +436,22 @@ export class OwnerPageComponent {
     const formatted = this.datePipe.transform(end, 'mediumTime');
     return formatted ?? '';
   };
+
+  protected amenitiesLabel(venue: Venue): string {
+    return venue.amenities?.length ? venue.amenities.join(', ') : 'No amenities listed yet.';
+  }
+
+  private readVenuePayload(): { name: string; location: string; sportType: string; pricePerHour: number; amenities: string[]; about: string; } {
+    return {
+      name: this.form.controls.name.getRawValue(),
+      location: this.form.controls.location.getRawValue(),
+      sportType: this.form.controls.sportType.getRawValue(),
+      pricePerHour: Number(this.form.controls.pricePerHour.getRawValue()),
+      amenities: this.form.controls.amenities.getRawValue()
+        .split(',')
+        .map((amenity) => amenity.trim())
+        .filter(Boolean),
+      about: this.form.controls.about.getRawValue().trim()
+    };
+  }
 }
