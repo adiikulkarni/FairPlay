@@ -77,4 +77,13 @@ public class VenueController {
         }
         return bookingManagementService.getBookingsForOwner(ownerId);
     }
+
+    @GetMapping("/owners/{ownerId}/venues")
+    public List<VenueResponse> getOwnerVenues(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                              @PathVariable Long ownerId) {
+        if (!currentUser.id().equals(ownerId)) {
+            throw new BusinessValidationException("Owner id must match authenticated user");
+        }
+        return venueManagementService.getVenueResponsesForOwner(ownerId);
+    }
 }

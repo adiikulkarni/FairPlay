@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Venue } from '../models';
 import { sportPlaceholder } from '../placeholder-images';
 import { FairplayStore } from '../services/fairplay-store.service';
 
@@ -153,6 +154,45 @@ import { FairplayStore } from '../services/fairplay-store.service';
           <section class="section-card">
             <div class="section-header">
               <div class="muted-grid">
+                <h2>Published venues</h2>
+                <p>Your owner-only venue inventory comes from the dedicated owner endpoint.</p>
+              </div>
+              <mat-chip-set>
+                <mat-chip>{{ ownerVenues().length }} venues</mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <div class="centered" *ngIf="loadingOwnerVenues()">
+              <mat-spinner diameter="36"></mat-spinner>
+            </div>
+
+            <div class="table-list" *ngIf="!loadingOwnerVenues()">
+              @for (venue of ownerVenues(); track venue.id) {
+                <div class="table-row">
+                  <div class="muted-grid">
+                    <strong>{{ venue.name }}</strong>
+                    <p>{{ venue.location }}</p>
+                    <p>{{ venue.about || 'No description added yet.' }}</p>
+                  </div>
+                  <div class="muted-grid">
+                    <mat-chip-set>
+                      <mat-chip>{{ venue.sportType }}</mat-chip>
+                      <mat-chip>Rs {{ venue.pricePerHour | number: '1.0-0' }}/hr</mat-chip>
+                    </mat-chip-set>
+                    <p>{{ amenitiesLabel(venue) }}</p>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state">
+                  <p>No venues published yet. Use the form to add your first venue.</p>
+                </div>
+              }
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              <div class="muted-grid">
                 <h2>Venue bookings</h2>
                 <p>Owner view of bookings tied to your venues with player details.</p>
               </div>
@@ -270,6 +310,7 @@ export class OwnerPageComponent {
   });
 
   constructor() {
+    void this.store.loadOwnerVenues().catch(() => undefined);
     void this.store.loadOwnerDashboardIfNeeded().catch(() => undefined);
     void this.store.loadOwnerBookings().catch(() => undefined);
     void this.store.loadVenues().catch(() => undefined);
@@ -277,6 +318,7 @@ export class OwnerPageComponent {
 
   protected async refresh(): Promise<void> {
     try {
+      await this.store.loadOwnerVenues();
       await this.store.loadOwnerDashboardIfNeeded();
       await this.store.loadOwnerBookings();
       this.message.set('');
@@ -316,10 +358,14 @@ export class OwnerPageComponent {
   }
 
   protected ownerBookings = this.store.ownerBookings;
+  protected ownerVenues = this.store.ownerVenues;
   protected loadingOwnerBookings = this.store.loadingOwnerBookings;
+  protected loadingOwnerVenues = this.store.loadingOwnerVenues;
 
   protected venueNameFor(venueId: number): string {
-    return this.store.venues().find((v) => v.id === venueId)?.name ?? `Venue #${venueId}`;
+    return this.store.ownerVenues().find((venue) => venue.id === venueId)?.name
+      ?? this.store.venues().find((venue) => venue.id === venueId)?.name
+      ?? `Venue #${venueId}`;
   }
 
   protected bookingEndTime = (booking: { slotTime: string; durationHours: number }): string => {
@@ -329,4 +375,8 @@ export class OwnerPageComponent {
     const formatted = this.datePipe.transform(end, 'mediumTime');
     return formatted ?? '';
   };
+
+  protected amenitiesLabel(venue: Venue): string {
+    return venue.amenities?.length ? venue.amenities.join(' • ') : 'No amenities listed yet.';
+  }
 }

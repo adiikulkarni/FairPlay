@@ -8,6 +8,7 @@ import com.gl.fairplay.venueservice.common.BusinessValidationException;
 import com.gl.fairplay.venueservice.domain.Booking;
 import com.gl.fairplay.venueservice.domain.BookingStatus;
 import com.gl.fairplay.venueservice.domain.Role;
+import com.gl.fairplay.venueservice.domain.Venue;
 import com.gl.fairplay.venueservice.integration.dto.UserSummary;
 import com.gl.fairplay.venueservice.repository.BookingRepository;
 import com.gl.fairplay.venueservice.repository.VenueRepository;
@@ -67,8 +68,8 @@ class VenueManagementServiceTest {
         when(userValidationService.validateOwner(1L))
                 .thenReturn(new UserSummary(1L, "Owner", "owner@example.com", "9876543210", Role.OWNER));
         when(venueRepository.findByOwnerId(1L)).thenReturn(List.of(
-                com.gl.fairplay.venueservice.domain.Venue.builder().id(10L).ownerId(1L).build(),
-                com.gl.fairplay.venueservice.domain.Venue.builder().id(11L).ownerId(1L).build()));
+                Venue.builder().id(10L).ownerId(1L).build(),
+                Venue.builder().id(11L).ownerId(1L).build()));
         when(bookingRepository.findByVenueIdIn(List.of(10L, 11L))).thenReturn(List.of(
                 Booking.builder().status(BookingStatus.BOOKED).totalPrice(BigDecimal.valueOf(1000)).build(),
                 Booking.builder().status(BookingStatus.CANCELLED).totalPrice(BigDecimal.valueOf(800)).build(),
@@ -80,5 +81,26 @@ class VenueManagementServiceTest {
         assertThat(response.activeBookings()).isEqualTo(2L);
         assertThat(response.cancelledBookings()).isEqualTo(1L);
         assertThat(response.totalEarnings()).isEqualByComparingTo("2200");
+    }
+
+    @Test
+    void getVenuesForOwnerReturnsMappedResponses() {
+        when(userValidationService.validateOwner(1L))
+                .thenReturn(new UserSummary(1L, "Owner", "owner@example.com", "9876543210", Role.OWNER));
+        when(venueRepository.findByOwnerId(1L)).thenReturn(List.of(
+                Venue.builder()
+                        .id(10L)
+                        .name("Smash Arena")
+                        .location("Pune")
+                        .sportType("Badminton")
+                        .pricePerHour(BigDecimal.valueOf(650))
+                        .ownerId(1L)
+                        .build()));
+
+        var response = venueManagementService.getVenueResponsesForOwner(1L);
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).name()).isEqualTo("Smash Arena");
+        assertThat(response.get(0).ownerId()).isEqualTo(1L);
     }
 }

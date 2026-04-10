@@ -162,6 +162,12 @@ public class VenueManagementService {
         return venueRepository.findByOwnerId(ownerId);
     }
 
+    public List<VenueResponse> getVenueResponsesForOwner(Long ownerId) {
+        return getVenuesForOwner(ownerId).stream()
+                .map(mapper::toVenueResponse)
+                .toList();
+    }
+
     private String normalize(String value) {
         if (value == null || value.isBlank()) {
             return null;

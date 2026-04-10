@@ -21,10 +21,12 @@ export class FairplayStore {
 
   readonly currentUser = signal<UserResponse | null>(this.readStoredUser());
   readonly venues = signal<Venue[]>([]);
+  readonly ownerVenues = signal<Venue[]>([]);
   readonly activities = signal<Activity[]>([]);
   readonly bookings = signal<Booking[]>([]);
   readonly ownerDashboard = signal<OwnerDashboardResponse | null>(null);
   readonly loadingVenues = signal(false);
+  readonly loadingOwnerVenues = signal(false);
   readonly loadingActivities = signal(false);
   readonly loadingBookings = signal(false);
   readonly ownerBookings = signal<Booking[]>([]);
@@ -48,6 +50,7 @@ export class FairplayStore {
     if (user) {
       void this.refreshCurrentUser().catch(() => this.logout());
       void this.loadBookings(user.id).catch(() => undefined);
+      void this.loadOwnerVenues().catch(() => undefined);
       void this.loadOwnerDashboardIfNeeded().catch(() => undefined);
     }
   }
@@ -96,6 +99,21 @@ export class FairplayStore {
       this.activities.set(enriched);
     } finally {
       this.loadingActivities.set(false);
+    }
+  }
+
+  async loadOwnerVenues(): Promise<void> {
+    const user = this.currentUser();
+    if (!user || user.role !== 'OWNER') {
+      this.ownerVenues.set([]);
+      return;
+    }
+    this.loadingOwnerVenues.set(true);
+    try {
+      const venues = await this.request(() => this.http.get<Venue[]>(this.url(`/owners/${user.id}/venues`)));
+      this.ownerVenues.set(venues);
+    } finally {
+      this.loadingOwnerVenues.set(false);
     }
   }
 
@@ -176,6 +194,7 @@ export class FairplayStore {
         ownerId: user.id
       })
     );
+    await this.loadOwnerVenues();
     await this.loadVenues();
     await this.loadOwnerDashboardIfNeeded();
   }
@@ -194,6 +213,8 @@ export class FairplayStore {
   logout(): void {
     this.currentUser.set(null);
     this.bookings.set([]);
+    this.ownerVenues.set([]);
+    this.ownerBookings.set([]);
     this.ownerDashboard.set(null);
     localStorage.removeItem(this.sessionKey);
     localStorage.removeItem(this.tokenKey);
@@ -203,6 +224,7 @@ export class FairplayStore {
    await this.refreshCurrentUser();
    const currentUser = this.requireUser();
    await this.loadBookings(currentUser.id);
+   await this.loadOwnerVenues();
    await this.loadOwnerDashboardIfNeeded();
   }
 
@@ -321,7 +343,7 @@ export class FairplayStore {
   private attachVenueNames(bookings: Booking[]): Booking[] {
     return bookings.map((booking) => ({
       ...booking,
-      venueName: this.venues().find((v) => v.id === booking.venueId)?.name ?? booking.venueName
+      venueName: this.findVenueName(booking.venueId) ?? booking.venueName
     }));
   }
 
@@ -353,5 +375,10 @@ export class FairplayStore {
 
   private resolveApiBase(): string {
     return '';
+  }
+
+  private findVenueName(venueId: number): string | undefined {
+    return this.ownerVenues().find((venue) => venue.id === venueId)?.name
+      ?? this.venues().find((venue) => venue.id === venueId)?.name;
   }
 }
